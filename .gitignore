@@ -3,6 +3,7 @@
 /.phpunit.cache
 /.phpunit.result.cache
 /coverage
+/workbench/resources/laravel-tui/
 composer.lock
 .phpunit.cache
 .phpunit.result.cache

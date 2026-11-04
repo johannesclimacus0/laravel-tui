@@ -1,31 +1,29 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "vendor-name/skeleton",
-    "description": "A Laravel package skeleton.",
+    "name": "johannesclimacus/laravel-tui",
+    "description": "A modular Laravel terminal dashboard with colored text art and a browser color editor.",
     "keywords": [
-        "vendor-name",
         "laravel",
-        "skeleton"
+        "johannesclimacus",
+        "laravel-tui"
     ],
-    "homepage": "https://github.com/vendor-name/skeleton",
+    "homepage": "https://github.com/johannesclimacus/laravel-tui",
     "license": "MIT",
     "authors": [
         {
-            "name": "Author Name",
-            "email": "author@example.com",
+            "name": "johannesclimacus",
+            "email": "dhdhfgffifid@gmail.com",
             "role": "Developer"
         }
     ],
     "require": {
-        "php": "^8.3",
-        "illuminate/support": "^12.0||^13.0"
+        "php": "^8.4.1",
+        "illuminate/support": "^12.0||^13.0",
+        "symfony/tui": "^8.1"
     },
     "require-dev": {
         "larastan/larastan": "^3.9",
-        "laravel/agent-detector": "^2.0",
-        "laravel/chisel": "^0.1",
         "laravel/pint": "^1.29",
-        "laravel/prompts": "^0.3",
         "laravel/pao": "^1.0",
         "orchestra/testbench": "^10.0||^11.0",
         "pestphp/pest": "^4.6||^5.0",
@@ -35,24 +33,18 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/"
+            "LaravelTui\\LaravelTui\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "LaravelTui\\LaravelTui\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "scripts": {
-        "post-install-cmd": [
-            "@php configure.php"
-        ],
-        "post-update-cmd": [
-            "@php configure.php"
-        ],
         "post-autoload-dump": [
             "@clear",
             "@prepare"
@@ -96,11 +88,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
-            ],
-            "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
-            }
+                "LaravelTui\\LaravelTui\\LaravelTuiServiceProvider"
+            ]
         }
     },
     "config": {

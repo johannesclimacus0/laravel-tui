@@ -1,0 +1,359 @@
+:root {
+  color-scheme: dark;
+  --panel: #25262b;
+  --field: #1d1e23;
+  --line: #3d3f47;
+  --text: #dedee3;
+  --muted: #a0a1ac;
+  --hover: #33353d;
+  --accent: #39c5bb;
+  font:
+    13px/1.5 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  color: var(--text);
+  background: var(--panel);
+  accent-color: var(--accent);
+  scrollbar-color: #50525e var(--field);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button,
+select {
+  cursor: pointer;
+}
+button {
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-variant-ligatures: none;
+}
+button:hover:not(:disabled) {
+  background: var(--hover);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+button[data-active="true"] {
+  background: #243d3d;
+  color: #8ce4dc;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+::selection {
+  background: #575064;
+  color: #fff;
+}
+h2,
+aside > label {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+h2 {
+  margin: 0 0 8px;
+}
+main {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr) 224px;
+  height: 100dvh;
+}
+aside {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px;
+  overflow-y: auto;
+}
+.left-panel {
+  border-right: 1px solid var(--line);
+}
+.right-panel {
+  border-left: 1px solid var(--line);
+}
+aside section {
+  margin-top: 22px;
+}
+.right-panel section:first-child {
+  margin-top: 0;
+}
+label {
+  display: block;
+  margin-bottom: 6px;
+}
+select {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--field);
+  max-width: 100%;
+  color: inherit;
+}
+.art-controls select {
+  width: 100%;
+}
+.tool-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+}
+.tool-grid button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  min-height: 30px;
+  padding-inline: 8px;
+  font-size: 12px;
+}
+.tool-grid button[data-active="true"] kbd {
+  color: var(--accent);
+}
+kbd {
+  color: var(--muted);
+  font:
+    10px ui-monospace,
+    monospace;
+  text-transform: lowercase;
+}
+.history {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.history button {
+  font-size: 17px;
+  line-height: 1;
+  min-height: 34px;
+}
+.brush-option {
+  margin-top: 10px;
+  font-size: 12px;
+}
+.brush-option label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+.palette-row {
+  display: grid;
+  grid-template-columns: 1fr 30px;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.palette-row button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-inline: 5px;
+  text-align: left;
+}
+.swatch {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1px solid #8888;
+  border-radius: 1px;
+}
+.palette-row code {
+  min-width: 10px;
+  white-space: nowrap;
+  font-size: 11px;
+}
+.palette-row small {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+input[type="color"] {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+#add-color {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px 40px;
+  gap: 5px;
+  margin-top: 9px;
+}
+#add-color button {
+  padding: 0;
+}
+#new-key {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 3px 8px;
+  background: var(--field);
+  color: var(--text);
+}
+.options {
+  font-size: 12px;
+}
+.options label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.options output {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.options input[type="range"] {
+  width: 100%;
+  margin: 0 0 10px;
+}
+#background {
+  margin-left: auto;
+}
+#preview {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  margin-inline: auto;
+}
+.workspace {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+#viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  place-items: safe center;
+  background: #20212c;
+}
+#editor {
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+}
+.panel-bottom {
+  margin-top: auto;
+  padding-top: 20px;
+}
+.panel-bottom #reset,
+.panel-bottom #export-button,
+.panel-bottom #save-button {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 0;
+  font-size: 14px;
+}
+.panel-bottom button:hover:not(:disabled) {
+  background: var(--text);
+  color: var(--field);
+}
+#status {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+#status:empty {
+  display: none;
+}
+dialog {
+  width: min(850px, calc(100% - 32px));
+  max-height: 90dvh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  padding: 20px;
+  background: var(--panel);
+  color: inherit;
+}
+dialog::backdrop {
+  background: #18151c80;
+}
+.dialog-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.dialog-heading h2 {
+  margin: 0;
+}
+#export-text {
+  display: block;
+  width: 100%;
+  height: 48dvh;
+  margin: 12px 0;
+  padding: 12px;
+  resize: vertical;
+  background: var(--field);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  font:
+    12px/1.6 ui-monospace,
+    monospace;
+  white-space: pre;
+  tab-size: 4;
+}
+@media (max-width: 1000px) {
+  main {
+    grid-template-columns: 180px minmax(0, 1fr) 180px;
+  }
+  .palette-row small {
+    display: none;
+  }
+}
+@media (max-width: 700px) {
+  main {
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+  .workspace {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: 75dvh;
+    min-height: 400px;
+  }
+  aside {
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+  .right-panel {
+    border-left: 1px solid var(--line);
+  }
+}
