@@ -7,6 +7,7 @@ namespace LaravelTui\LaravelTui\Modules;
 use Illuminate\Contracts\Console\Kernel;
 use LaravelTui\LaravelTui\Contracts\Module;
 use LaravelTui\LaravelTui\UI\SearchableList;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\ContainerWidget;
@@ -55,12 +56,15 @@ class ArtisanModule implements Module
 
         $list->onSelect(function (SelectEvent $event) use ($commands, $details): void {
             $command = $commands[$event->getValue()];
+            $formatter = new OutputFormatter(decorated: true);
 
-            $details->setText(implode("\n\n", [
+            $text = implode("\n\n", [
                 $command->getDescription(),
                 'php artisan '.$command->getSynopsis(),
-                $command->getHelp(),
-            ]));
+                $command->getProcessedHelp(),
+            ]);
+
+            $details->setText($formatter->format($text) ?? '');
         });
 
         $panel = new ContainerWidget;
