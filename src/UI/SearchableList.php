@@ -64,7 +64,7 @@ class SearchableList extends ContainerWidget
 
         $this->setStyle(new Style(gap: 1));
         $this->expandVertically(true);
-        $this->searchBar = new Panel('', '#39C5BB');
+        $this->searchBar = new Panel('', config('laravel-tui.theme.focus', '#6DE2D5'));
 
         if ($footerPrompt !== null) {
             $this->configureInput();

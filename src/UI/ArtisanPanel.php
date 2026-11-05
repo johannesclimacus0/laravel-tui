@@ -130,7 +130,7 @@ class ArtisanPanel extends ContainerWidget
         $this->add($this->output);
         $this->add($this->status);
 
-        $entry = new Panel('', '#39C5BB');
+        $entry = new Panel('', config('laravel-tui.theme.focus', '#6DE2D5'));
         $entry->content()->add($this->arguments);
         $this->add($entry);
         $this->getContext()?->getFocusManager()->setFocus($this->arguments);
@@ -138,7 +138,7 @@ class ArtisanPanel extends ContainerWidget
 
     private function commandPrompt(string $name = ''): string
     {
-        $prefix = (new Style(color: '#65727A'))->apply('php artisan');
+        $prefix = (new Style(color: config('laravel-tui.theme.muted', '#65727A')))->apply('php artisan');
 
         return '> '.$prefix.($name === '' ? ' ' : ' '.$name.' ');
     }

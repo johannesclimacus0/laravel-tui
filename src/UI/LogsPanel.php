@@ -391,7 +391,7 @@ class LogsPanel extends ContainerWidget
 
     private function makeStatus(): TextWidget
     {
-        return new TextWidget()->setStyle(new Style(color: '#65727A'));
+        return new TextWidget()->setStyle(new Style(color: config('laravel-tui.theme.muted', '#65727A')));
     }
 
     private function updateStatus(): void
