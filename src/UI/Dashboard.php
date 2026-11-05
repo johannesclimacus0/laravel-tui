@@ -160,7 +160,7 @@ class Dashboard
         $tui->onTick($resize);
 
         // Open selected module
-        $menu->onSelect(function (SelectEvent $event) use ($tui, $indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt): void {
+        $menu->onSelect(function (SelectEvent $event) use ($tui, $menu, $indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt): void {
             $module = $indexed[$event->getValue()];
             $widget = $module->widget();
 
@@ -170,7 +170,10 @@ class Dashboard
             $caption->setText($this->caption($module->id(), $captions));
             $activeArt = $moduleArt[$module->id()] ?? $defaultArt;
             $art->setName($activeArt);
-            $tui->getFocusManager()->focusNext();
+
+            if ($tui->getFocus() === $menu) {
+                $tui->getFocusManager()->focusNext();
+            }
         });
 
         // Keybindings

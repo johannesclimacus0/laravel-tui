@@ -9,6 +9,7 @@ use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\InputWidget;
+use Symfony\Component\Tui\Widget\WidgetContext;
 
 class SearchableList extends ContainerWidget
 {
@@ -23,10 +24,12 @@ class SearchableList extends ContainerWidget
     /**
      * @param  list<array{value: string, label: string, search?: string}>  $items
      */
-    public function __construct(private array $items)
-    {
+    public function __construct(
+        private array $items,
+        private ?string $footerPrompt = null,
+    ) {
         $this->input = new InputWidget;
-        $this->input->setPrompt('/ ');
+        $this->input->setPrompt($footerPrompt ?? '/ ');
 
         $this->list = new AdaptiveList($this->listItems($items));
         $this->list->addStyleClass('module-menu');
@@ -44,6 +47,20 @@ class SearchableList extends ContainerWidget
         $this->setStyle(new Style(gap: 1));
         $this->expandVertically(true);
         $this->searchBar = new ContainerWidget;
+
+        if ($footerPrompt !== null) {
+            $this->configureInput();
+            $this->list->expandVertically(true);
+            $frame = new Panel('', '#39C5BB');
+            $frame->content()->add($this->input);
+            $this->searchBar->add($frame);
+            $this->searching = true;
+            $this->add($this->list);
+            $this->add($this->searchBar);
+
+            return;
+        }
+
         $this->searchBar->setStyle(new Style(hidden: true));
         $this->add($this->searchBar);
         $this->add($this->list);
@@ -59,12 +76,25 @@ class SearchableList extends ContainerWidget
 
     public function focus(): void
     {
-        $this->getContext()?->getFocusManager()->setFocus($this->list);
+        $this->getContext()?->getFocusManager()->setFocus($this->footerPrompt === null ? $this->list : $this->input);
     }
 
     private function configureInput(): void
     {
         $this->input->onInput(function (string $data): bool {
+            if ($this->footerPrompt !== null) {
+                $keys = $this->list->getKeybindings();
+
+                if ($keys->matches($data, 'select_up') || $keys->matches($data, 'select_down')) {
+                    $this->list->handleInput($data);
+                    $this->getContext()?->requestRender();
+
+                    return true;
+                }
+
+                return false;
+            }
+
             if (! $this->input->getKeybindings()->matches($data, 'toggle_search')) {
                 return false;
             }
@@ -92,6 +122,12 @@ class SearchableList extends ContainerWidget
         });
 
         $this->input->onSubmit(function (): void {
+            if ($this->footerPrompt !== null) {
+                $this->list->handleInput("\r");
+
+                return;
+            }
+
             $this->getContext()?->getFocusManager()->setFocus($this->list);
         });
 
@@ -127,10 +163,24 @@ class SearchableList extends ContainerWidget
             $this->input->setValue('');
             $this->list->setItems($this->listItems($this->items));
         }
+
+        if ($this->footerPrompt !== null) {
+            $this->focus();
+
+            return;
+        }
+
         $this->searchBar->remove($this->input);
         $this->searchBar->setStyle(new Style(hidden: true));
         $this->searching = false;
         $this->getContext()?->getFocusManager()->setFocus($this->list);
+    }
+
+    protected function onAttach(WidgetContext $context): void
+    {
+        if ($this->footerPrompt !== null) {
+            $context->getFocusManager()->setFocus($this->input);
+        }
     }
 
     /**

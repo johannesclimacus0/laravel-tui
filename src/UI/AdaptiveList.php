@@ -6,9 +6,12 @@ namespace LaravelTui\LaravelTui\UI;
 
 use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Render\RenderContext;
+use Symfony\Component\Tui\Widget\VerticallyExpandableInterface;
 
-class AdaptiveList extends MenuList
+class AdaptiveList extends MenuList implements VerticallyExpandableInterface
 {
+    private bool $expanded = false;
+
     /** @param list<array{value: string, label: string}> $items */
     public function __construct(private array $items)
     {
@@ -23,7 +26,7 @@ class AdaptiveList extends MenuList
             return $lines;
         }
 
-        $rows = max(1, (int) floor($context->getRows() * 0.85));
+        $rows = max(1, (int) floor($context->getRows() * ($this->expanded ? 1 : 0.85)));
         $count = count($this->items);
         $scrolling = $count > $rows;
         $visible = max(1, $rows - ($scrolling && $rows > 1 ? 1 : 0));
@@ -49,5 +52,18 @@ class AdaptiveList extends MenuList
         $this->items = $items;
 
         return parent::setItems($this->items);
+    }
+
+    public function expandVertically(bool $expand): static
+    {
+        $this->expanded = $expand;
+        $this->invalidate();
+
+        return $this;
+    }
+
+    public function isVerticallyExpanded(): bool
+    {
+        return $this->expanded;
     }
 }

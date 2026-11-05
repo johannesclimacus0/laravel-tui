@@ -25,6 +25,8 @@ return [
         'output_line_up' => ['up'],
         'output_line_down' => ['down'],
         'output_back' => ['escape'],
+        'history_previous' => ['up'],
+        'history_next' => ['down'],
     ],
 
     'artisan' => [

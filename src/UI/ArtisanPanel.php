@@ -35,6 +35,13 @@ class ArtisanPanel extends ContainerWidget
 
     private string $buffer = '';
 
+    /** @var array<string, list<string>> */
+    private array $history = [];
+
+    private int $historyIndex = 0;
+
+    private string $draft = '';
+
     /** @param array<string, Command> $commands */
     public function __construct(
         private array $commands,
@@ -52,7 +59,7 @@ class ArtisanPanel extends ContainerWidget
         foreach ($this->commands as $name => $command) {
             $items[] = ['value' => $name, 'label' => $name, 'search' => $command->getDescription()];
         }
-        $list = new SearchableList($items);
+        $list = new SearchableList($items, footerPrompt: $this->commandPrompt());
         $list->onSelect(fn (SelectEvent $event) => $this->showCommand($event->getValue()));
         $this->add($list);
         $list->focus();
@@ -62,16 +69,16 @@ class ArtisanPanel extends ContainerWidget
     {
         $command = $this->commands[$name];
         $this->clear();
-        $this->add(new TextWidget('php artisan '.$command->getSynopsis()));
-
+        $this->historyIndex = count($this->history[$name] ?? []);
+        $this->draft = '';
         $this->arguments = new InputWidget;
-        $this->arguments->setPrompt('arguments > ');
+        $this->arguments->setPrompt($this->commandPrompt($name));
         $this->arguments->onSubmit(fn () => $this->start($name));
         $this->arguments->onCancel(function (): void {
             $this->cancel();
             $this->showBrowser();
         });
-        $this->arguments->onInput(function (string $data): bool {
+        $this->arguments->onInput(function (string $data) use ($name): bool {
             $keys = $this->arguments->getKeybindings();
 
             if ($keys->matches($data, 'output_up') || $keys->matches($data, 'output_down')) {
@@ -81,12 +88,18 @@ class ArtisanPanel extends ContainerWidget
                 return true;
             }
 
+            if (
+                ! ($this->process?->isRunning() ?? false)
+                && ($keys->matches($data, 'history_previous') || $keys->matches($data, 'history_next'))
+            ) {
+                $this->restoreHistory($name, $keys->matches($data, 'history_previous') ? -1 : 1);
+
+                return true;
+            }
+
             return ! $keys->matches($data, 'select_cancel') && ($this->process?->isRunning() ?? false);
         });
-        $this->add($this->arguments);
-
-        $this->status = new TextWidget('Enter arguments and press Enter to run. Escape returns to commands.');
-        $this->add($this->status);
+        $this->status = new TextWidget;
 
         $this->output = new ScrollableText;
         $this->output->addStyleClass('command-output');
@@ -99,10 +112,22 @@ class ArtisanPanel extends ContainerWidget
 
             return true;
         });
-        $help = $command->getProcessedHelp();
+        $help = 'Usage: php artisan '.$command->getSynopsis()."\n\n".$command->getProcessedHelp();
         $this->output->setText((new OutputFormatter(decorated: true))->format($help) ?? '');
         $this->add($this->output);
+        $this->add($this->status);
+
+        $entry = new Panel('', '#39C5BB');
+        $entry->content()->add($this->arguments);
+        $this->add($entry);
         $this->getContext()?->getFocusManager()->setFocus($this->arguments);
+    }
+
+    private function commandPrompt(string $name = ''): string
+    {
+        $prefix = (new Style(color: '#65727A'))->apply('php artisan');
+
+        return '> '.$prefix.($name === '' ? ' ' : ' '.$name.' ');
     }
 
     private function start(string $name): void
@@ -115,10 +140,18 @@ class ArtisanPanel extends ContainerWidget
 
         try {
             $this->process = $this->runner->start($name, $this->arguments->getValue());
+            $history = $this->history[$name] ?? [];
+            $arguments = $this->arguments->getValue();
+
+            if ($history === [] || $history[array_key_last($history)] !== $arguments) {
+                $history[] = $arguments;
+            }
+            $this->history[$name] = array_slice($history, -50);
+            $this->historyIndex = count($this->history[$name]);
             $this->buffer = '';
             $this->output->setText('');
             $this->output->followOutput();
-            $this->status->setText('Running. Ctrl+C cancels; arrows/PageUp/PageDown scroll.');
+            $this->status->setText('Running…');
             $this->tickId = $this->getContext()?->scheduleTick($this->poll(...), 0.1);
             $this->getContext()?->getFocusManager()->setFocus($this->output);
             $this->poll();
@@ -152,6 +185,17 @@ class ArtisanPanel extends ContainerWidget
         $this->getContext()?->requestRender();
     }
 
+    private function restoreHistory(string $name, int $direction): void
+    {
+        $history = $this->history[$name] ?? [];
+
+        if ($this->historyIndex === count($history)) {
+            $this->draft = $this->arguments->getValue();
+        }
+        $this->historyIndex = max(0, min(count($history), $this->historyIndex + $direction));
+        $this->arguments->setValue($history[$this->historyIndex] ?? $this->draft);
+    }
+
     private function cancel(): bool
     {
         if (! ($this->process?->isRunning() ?? false)) {
@@ -162,7 +206,7 @@ class ArtisanPanel extends ContainerWidget
 
         $this->process->stop(0.2);
         $this->poll();
-        $this->status->setText('Cancelled. Edit arguments and press Enter to run again.');
+        $this->status->setText('Cancelled.');
 
         return true;
     }
