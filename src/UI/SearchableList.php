@@ -34,6 +34,12 @@ class SearchableList extends ContainerWidget
         $this->list = new AdaptiveList($this->listItems($items));
         $this->list->addStyleClass('module-menu');
         $this->list->onInput(function (string $data): bool {
+            if ($this->footerPrompt !== null && $this->list->getKeybindings()->matches($data, 'complete_command')) {
+                $this->completeCommand();
+
+                return true;
+            }
+
             if (! $this->list->getKeybindings()->matches($data, 'toggle_search')) {
                 return false;
             }
@@ -79,11 +85,59 @@ class SearchableList extends ContainerWidget
         $this->getContext()?->getFocusManager()->setFocus($this->footerPrompt === null ? $this->list : $this->input);
     }
 
+    public function query(): string
+    {
+        return $this->input->getValue();
+    }
+
+    public function selectedValue(): ?string
+    {
+        return $this->list->getSelectedItem()['value'] ?? null;
+    }
+
+    public function setQuery(string $query, ?string $selected = null): void
+    {
+        $this->input->setValue($query);
+        $this->filter($query, $selected);
+    }
+
+    private function filter(string $query, ?string $selected = null): void
+    {
+        $query = trim($query);
+        $filtered = array_values(array_filter(
+            $this->items,
+            static fn (array $item): bool => $query === ''
+                || mb_stripos($item['label'].' '.($item['search'] ?? ''), $query) !== false,
+        ));
+        $this->list->setItems($this->listItems($filtered));
+        $index = array_search($selected, array_column($filtered, 'value'), true);
+
+        if ($index !== false) {
+            $this->list->setSelectedIndex($index);
+        }
+    }
+
+    private function completeCommand(): void
+    {
+        $selected = $this->selectedValue();
+
+        if ($selected !== null) {
+            $this->setQuery($selected, $selected);
+            $this->getContext()?->requestRender();
+        }
+    }
+
     private function configureInput(): void
     {
         $this->input->onInput(function (string $data): bool {
             if ($this->footerPrompt !== null) {
                 $keys = $this->list->getKeybindings();
+
+                if ($keys->matches($data, 'complete_command')) {
+                    $this->completeCommand();
+
+                    return true;
+                }
 
                 if ($keys->matches($data, 'select_up') || $keys->matches($data, 'select_down')) {
                     $this->list->handleInput($data);
@@ -105,20 +159,7 @@ class SearchableList extends ContainerWidget
         });
 
         $this->input->onChange(function (ChangeEvent $event): void {
-            $query = trim($event->getValue());
-
-            $filtered = array_filter(
-                $this->items,
-                static fn (array $item): bool => $query === ''
-                    || mb_stripos(
-                        $item['label'].' '.($item['search'] ?? ''),
-                        $query,
-                    ) !== false,
-            );
-
-            $this->list->setItems(
-                $this->listItems(array_values($filtered)),
-            );
+            $this->filter($event->getValue());
         });
 
         $this->input->onSubmit(function (): void {

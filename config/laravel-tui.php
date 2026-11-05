@@ -27,9 +27,11 @@ return [
         'output_back' => ['escape'],
         'history_previous' => ['up'],
         'history_next' => ['down'],
+        'complete_command' => ['right'],
     ],
 
     'artisan' => [
+        'exclude' => [],
         'command' => [PHP_BINARY, base_path('artisan')],
         'working_directory' => base_path(),
     ],

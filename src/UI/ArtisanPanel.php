@@ -7,7 +7,11 @@ namespace LaravelTui\LaravelTui\UI;
 use Closure;
 use LaravelTui\LaravelTui\Console\ArtisanRunner;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Descriptor\TextDescriptor;
 use Symfony\Component\Console\Formatter\OutputFormatter;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\SelectEvent;
@@ -42,6 +46,10 @@ class ArtisanPanel extends ContainerWidget
 
     private string $draft = '';
 
+    private string $browserQuery = '';
+
+    private ?string $browserSelection = null;
+
     /** @param array<string, Command> $commands */
     public function __construct(
         private array $commands,
@@ -60,7 +68,12 @@ class ArtisanPanel extends ContainerWidget
             $items[] = ['value' => $name, 'label' => $name, 'search' => $command->getDescription()];
         }
         $list = new SearchableList($items, footerPrompt: $this->commandPrompt());
-        $list->onSelect(fn (SelectEvent $event) => $this->showCommand($event->getValue()));
+        $list->setQuery($this->browserQuery, $this->browserSelection);
+        $list->onSelect(function (SelectEvent $event) use ($list): void {
+            $this->browserQuery = $list->query();
+            $this->browserSelection = $event->getValue();
+            $this->showCommand($event->getValue());
+        });
         $this->add($list);
         $list->focus();
     }
@@ -112,8 +125,7 @@ class ArtisanPanel extends ContainerWidget
 
             return true;
         });
-        $help = 'Usage: php artisan '.$command->getSynopsis()."\n\n".$command->getProcessedHelp();
-        $this->output->setText((new OutputFormatter(decorated: true))->format($help) ?? '');
+        $this->output->setText($this->commandHelp($command));
         $this->add($this->output);
         $this->add($this->status);
 
@@ -128,6 +140,36 @@ class ArtisanPanel extends ContainerWidget
         $prefix = (new Style(color: '#65727A'))->apply('php artisan');
 
         return '> '.$prefix.($name === '' ? ' ' : ' '.$name.' ');
+    }
+
+    private function commandHelp(Command $command): string
+    {
+        $command->mergeApplicationDefinition(false);
+        $definition = new InputDefinition;
+
+        foreach ($command->getDefinition()->getArguments() as $argument) {
+            $mode = $argument->isRequired() ? InputArgument::REQUIRED : InputArgument::OPTIONAL;
+            $definition->addArgument(new InputArgument(
+                $argument->getName(),
+                $mode | ($argument->isArray() ? InputArgument::IS_ARRAY : 0),
+                ($argument->isRequired() ? '[required] ' : '[optional] ').$argument->getDescription(),
+                $argument->isRequired() ? null : $argument->getDefault(),
+            ));
+        }
+        $definition->addOptions($command->getDefinition()->getOptions());
+
+        $output = new BufferedOutput(decorated: true);
+        $output->writeln('Usage: php artisan '.OutputFormatter::escape($command->getSynopsis()));
+        $output->writeln('');
+        (new TextDescriptor)->describe($output, $definition);
+
+        $help = $command->getProcessedHelp();
+
+        if ($help !== '') {
+            $output->writeln("\n\n".$help);
+        }
+
+        return $output->fetch();
     }
 
     private function start(string $name): void

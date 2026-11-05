@@ -34,9 +34,10 @@ class ArtisanModule implements Module
         ksort($commands);
 
         $available = [];
+        $excluded = config('laravel-tui.artisan.exclude', []);
 
         foreach ($commands as $name => $command) {
-            if ($command->isHidden() || $name === 'ui') {
+            if ($command->isHidden() || $name === 'ui' || in_array($name, $excluded, true)) {
                 continue;
             }
 
