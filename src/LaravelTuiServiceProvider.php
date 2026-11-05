@@ -9,6 +9,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use LaravelTui\LaravelTui\Art\ArtRepository;
+use LaravelTui\LaravelTui\Console\ArtisanRunner;
 use LaravelTui\LaravelTui\Console\Commands\LaravelTuiCommand;
 use LaravelTui\LaravelTui\UI\Miku;
 
@@ -27,6 +28,10 @@ class LaravelTuiServiceProvider extends ServiceProvider
             $app->make(Filesystem::class),
         ));
         $this->app->singleton(Miku::class);
+        $this->app->bind(ArtisanRunner::class, fn (): ArtisanRunner => new ArtisanRunner(
+            config('laravel-tui.artisan.command'),
+            config('laravel-tui.artisan.working_directory'),
+        ));
     }
 
     /**

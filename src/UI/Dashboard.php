@@ -16,6 +16,7 @@ use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 use Symfony\Component\Tui\Widget\ContainerWidget;
+use Symfony\Component\Tui\Widget\InputWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
 class Dashboard
@@ -61,7 +62,9 @@ class Dashboard
         }
 
         // TUI init
-        $tui = new Tui;
+        $keys = new Keybindings($keybindings);
+        $tui = new Tui(keybindings: $keys);
+
         $accent = '#39C5BB';
         $muted = '#65727A';
         $pink = '#E879A9';
@@ -69,6 +72,7 @@ class Dashboard
         $tui->addStyleSheet(new StyleSheet([
             '.module-menu::selected' => new Style(color: $accent, bold: true),
             '.module-menu::selected:focus' => new Style(color: $accent, bold: true),
+            '.command-output::selected' => new Style(color: $accent, bold: true),
         ]));
 
         // Project panel
@@ -156,7 +160,7 @@ class Dashboard
         $tui->onTick($resize);
 
         // Open selected module
-        $menu->onSelect(function (SelectEvent $event) use ($indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt): void {
+        $menu->onSelect(function (SelectEvent $event) use ($tui, $menu, $indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt): void {
             $module = $indexed[$event->getValue()];
             $widget = $module->widget();
 
@@ -166,12 +170,21 @@ class Dashboard
             $caption->setText($this->caption($module->id(), $captions));
             $activeArt = $moduleArt[$module->id()] ?? $defaultArt;
             $art->setName($activeArt);
+
+            if ($tui->getFocus() === $menu) {
+                $tui->getFocusManager()->focusNext();
+            }
         });
 
         // Keybindings
-        $keys = new Keybindings($keybindings);
-
         $tui->addListener(function (InputEvent $event) use ($keys, $tui, $keyAliases, $art, $artNames, &$activeArt): void {
+            if (
+                $tui->getFocus() instanceof InputWidget
+                && ! $keys->getParser()->matches($event->getData(), 'ctrl+c')
+            ) {
+                return;
+            }
+
             $key = strtr($event->getData(), $keyAliases);
 
             if ($keys->matches($key, 'quit')) {
@@ -191,7 +204,12 @@ class Dashboard
         });
 
         $tui->setFocus($menu);
-        $tui->run();
+
+        try {
+            $tui->run();
+        } finally {
+            $content->clear();
+        }
     }
 
     /**

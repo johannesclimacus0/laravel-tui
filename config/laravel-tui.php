@@ -1,32 +1,39 @@
 <?php
 
 declare(strict_types=1);
+
+use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\ExampleModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
 
 return [
-    'art' => [
-        'path' => resource_path('laravel-tui'),
-        'default' => 'mliku',
-        'modules' => [
-            'overview' => 'mliku',
-            'example' => 'popipoipo',
-        ],
-    ],
-
-    'editor' => [
-        'enabled' => true,
-        'prefix' => 'laravel-tui/art-editor',
-    ],
-
     'modules' => [
         OverviewModule::class,
         ExampleModule::class,
+        ArtisanModule::class,
     ],
 
     'keybindings' => [
         'quit' => ['q', 'ctrl+c'],
         'cycle_art' => ['a'],
+        'toggle_search' => ['/', '.'],
+        'focus_next' => ['tab'],
+        'focus_previous' => ['shift+tab'],
+        'interrupt' => ['ctrl+c'],
+        'output_up' => ['page_up'],
+        'output_down' => ['page_down'],
+        'output_line_up' => ['up'],
+        'output_line_down' => ['down'],
+        'output_back' => ['escape'],
+        'history_previous' => ['up'],
+        'history_next' => ['down'],
+        'complete_command' => ['right'],
+    ],
+
+    'artisan' => [
+        'exclude' => [],
+        'command' => [PHP_BINARY, base_path('artisan')],
+        'working_directory' => base_path(),
     ],
 
     'key_aliases' => [
@@ -38,12 +45,28 @@ return [
         'Ф' => 'a',
     ],
 
+    'art' => [
+        'path' => resource_path('laravel-tui'),
+        'default' => 'mliku',
+        'modules' => [
+            'overview' => 'mliku',
+            'example' => 'popipoipo',
+            'artisan' => 'miku.exe',
+        ],
+    ],
+
+    'editor' => [
+        'enabled' => true,
+        'prefix' => 'laravel-tui/art-editor',
+    ],
+
     'icons' => [
         'project' => "\u{f07b}",
         'default_module' => "\u{f12e}",
         'modules' => [
             'overview' => "\u{f015}",
             'example' => "\u{f121}",
+            'artisan' => "\u{f011b}",
         ],
     ],
 
@@ -57,6 +80,9 @@ return [
         ],
         'example' => [
             'oo ee oo~',
+        ],
+        'artisan' => [
+            'maybe later',
         ],
     ],
 ];
