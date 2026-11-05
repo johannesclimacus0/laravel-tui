@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
-use LaravelTui\LaravelTui\Modules\ExampleModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
+use LaravelTui\LaravelTui\Modules\LogsModule;
 
 return [
     'modules' => [
         OverviewModule::class,
-        ExampleModule::class,
         ArtisanModule::class,
+        LogsModule::class,
     ],
 
     'keybindings' => [
@@ -50,7 +50,6 @@ return [
         'default' => 'mliku',
         'modules' => [
             'overview' => 'mliku',
-            'example' => 'popipoipo',
             'artisan' => 'miku.exe',
         ],
     ],
@@ -85,4 +84,8 @@ return [
             'maybe later',
         ],
     ],
+
+    'logs' => [
+        'path' => storage_path('logs'),
+    ]
 ];
