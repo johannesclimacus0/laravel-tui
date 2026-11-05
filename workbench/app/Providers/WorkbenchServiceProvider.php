@@ -17,7 +17,6 @@ class WorkbenchServiceProvider extends ServiceProvider
         $root = dirname(__DIR__, 3);
         $this->app['config']->set('laravel-tui.artisan.command', [PHP_BINARY, $root.'/vendor/bin/testbench']);
         $this->app['config']->set('laravel-tui.artisan.working_directory', $root);
-        $this->app['config']->set('laravel-tui.logs.path', dirname(__DIR__, 2).'/storage/logs');
     }
 
     /**
