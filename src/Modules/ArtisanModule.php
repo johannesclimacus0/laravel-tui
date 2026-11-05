@@ -6,7 +6,7 @@ namespace LaravelTui\LaravelTui\Modules;
 
 use Illuminate\Contracts\Console\Kernel;
 use LaravelTui\LaravelTui\Contracts\Module;
-use LaravelTui\LaravelTui\UI\CommandList;
+use LaravelTui\LaravelTui\UI\SearchableList;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\ContainerWidget;
@@ -41,6 +41,7 @@ class ArtisanModule implements Module
             $items[] = [
                 'value' => $name,
                 'label' => $name,
+                'search' => $command->getDescription(),
             ];
         }
 
@@ -48,8 +49,7 @@ class ArtisanModule implements Module
             return new TextWidget('No commands available.');
         }
 
-        $list = new CommandList($items);
-        $list->addStyleClass('module-menu');
+        $list = new SearchableList($items);
 
         $details = new TextWidget;
 

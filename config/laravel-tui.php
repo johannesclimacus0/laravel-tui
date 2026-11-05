@@ -16,6 +16,7 @@ return [
     'keybindings' => [
         'quit' => ['q', 'ctrl+c'],
         'cycle_art' => ['a'],
+        'toggle_search' => ['/', '.'],
         'focus_next' => ['tab'],
         'focus_previous' => ['shift+tab'],
     ],

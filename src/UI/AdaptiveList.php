@@ -7,7 +7,7 @@ namespace LaravelTui\LaravelTui\UI;
 use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Render\RenderContext;
 
-class CommandList extends MenuList
+class AdaptiveList extends MenuList
 {
     /** @param list<array{value: string, label: string}> $items */
     public function __construct(private array $items)
@@ -41,5 +41,13 @@ class CommandList extends MenuList
         }
 
         return $window;
+    }
+
+    /** @param list<array{value: string, label: string}> $items */
+    public function setItems(array $items): static
+    {
+        $this->items = $items;
+
+        return parent::setItems($this->items);
     }
 }

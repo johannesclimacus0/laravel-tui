@@ -16,6 +16,7 @@ use Symfony\Component\Tui\Style\StyleSheet;
 use Symfony\Component\Tui\Style\VerticalAlign;
 use Symfony\Component\Tui\Tui;
 use Symfony\Component\Tui\Widget\ContainerWidget;
+use Symfony\Component\Tui\Widget\InputWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
 
 class Dashboard
@@ -173,6 +174,13 @@ class Dashboard
 
         // Keybindings
         $tui->addListener(function (InputEvent $event) use ($keys, $tui, $keyAliases, $art, $artNames, &$activeArt): void {
+            if (
+                $tui->getFocus() instanceof InputWidget
+                && ! $keys->getParser()->matches($event->getData(), 'ctrl+c')
+            ) {
+                return;
+            }
+
             $key = strtr($event->getData(), $keyAliases);
 
             if ($keys->matches($key, 'quit')) {
