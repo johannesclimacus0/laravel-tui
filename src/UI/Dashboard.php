@@ -186,7 +186,8 @@ class Dashboard
                 return;
             }
 
-            $key = strtr($event->getData(), $keyAliases);
+            $printable = $keys->getParser()->decodePrintable($event->getData()) ?? $event->getData();
+            $key = strtr($printable, $keyAliases);
 
             if ($keys->matches($key, 'quit')) {
                 $event->stopPropagation();

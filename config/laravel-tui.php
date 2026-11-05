@@ -16,7 +16,7 @@ return [
     'keybindings' => [
         'quit' => ['q', 'ctrl+c'],
         'cycle_art' => ['a'],
-        'toggle_search' => ['/', '.'],
+        'toggle_search' => ['/'],
         'focus_next' => ['tab'],
         'focus_previous' => ['shift+tab'],
         'interrupt' => ['ctrl+c'],
@@ -28,14 +28,10 @@ return [
         'history_previous' => ['up'],
         'history_next' => ['down'],
         'complete_command' => ['right'],
-        'logs_start' => ['home'],
-        'logs_follow' => ['end'],
-    ],
-
-    'artisan' => [
-        'exclude' => [],
-        'command' => [PHP_BINARY, base_path('artisan')],
-        'working_directory' => base_path(),
+        'logs_start' => ['ctrl+up'],
+        'logs_follow' => ['ctrl+down'],
+        'logs_level' => ['f'],
+        'logs_pause' => ['p'],
     ],
 
     'key_aliases' => [
@@ -45,6 +41,19 @@ return [
         'A' => 'a',
         'ф' => 'a',
         'Ф' => 'a',
+        'F' => 'f',
+        'а' => 'f',
+        'А' => 'f',
+        'P' => 'p',
+        'з' => 'p',
+        'З' => 'p',
+        '.' => '/',
+    ],
+
+    'artisan' => [
+        'exclude' => [],
+        'command' => [PHP_BINARY, base_path('artisan')],
+        'working_directory' => base_path(),
     ],
 
     'art' => [
@@ -88,7 +97,7 @@ return [
             'maybe later',
         ],
         'logs' => [
-            'the logs remember everything.',
+            'maybe later',
         ],
     ],
 

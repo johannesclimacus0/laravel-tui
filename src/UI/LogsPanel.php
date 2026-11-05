@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace LaravelTui\LaravelTui\UI;
 
 use Illuminate\Filesystem\Filesystem;
+use LaravelTui\LaravelTui\Logs\LogBuffer;
+use LaravelTui\LaravelTui\Logs\LogRecord;
 use RuntimeException;
 use Symfony\Component\Tui\Ansi\AnsiUtils;
-use Symfony\Component\Tui\Event\ChangeEvent;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\ContainerWidget;
@@ -29,15 +30,25 @@ class LogsPanel extends ContainerWidget
 
     private ?SearchableList $list = null;
 
-    private ?ScrollableText $output = null;
+    private ?SearchableList $records = null;
+
+    private ?ScrollableText $detail = null;
+
+    private ?LogRecord $opened = null;
 
     private TextWidget $status;
 
-    private ?ContainerWidget $searchBar = null;
+    private LogBuffer $buffer;
 
-    private ?InputWidget $search = null;
+    private string $recordQuery = '';
 
-    private string $contentQuery = '';
+    private ?string $recordSelection = null;
+
+    private bool $recordSearchOpen = false;
+
+    private bool $paused = false;
+
+    private bool $following = true;
 
     private string $text = '';
 
@@ -46,10 +57,6 @@ class LogsPanel extends ContainerWidget
     private string $identity = '';
 
     private int $size = 0;
-
-    private int $entries = 0;
-
-    private int $matches = 0;
 
     private ?string $readError = null;
 
@@ -63,6 +70,7 @@ class LogsPanel extends ContainerWidget
     ) {
         $this->maxBytes = max(1024, min(8388608, $maxBytes));
         $this->refreshInterval = max(0.1, min(60.0, $refreshInterval));
+        $this->buffer = new LogBuffer;
         $this->setStyle(new Style(gap: 1));
         $this->expandVertically(true);
         $this->showFiles();
@@ -72,12 +80,11 @@ class LogsPanel extends ContainerWidget
     {
         $this->currentFile = null;
         $this->clear();
-        $this->output = null;
-        $this->searchBar = null;
-        $this->search = null;
+        $this->records = null;
+        $this->detail = null;
+        $this->opened = null;
         $this->fileSignature = '';
-        $this->status = new TextWidget;
-        $this->status->setStyle(new Style(color: '#65727A'));
+        $this->status = $this->makeStatus();
         $this->list = new SearchableList([]);
         $this->list->onSelect(function (SelectEvent $event): void {
             $this->query = $this->list?->query() ?? '';
@@ -86,8 +93,8 @@ class LogsPanel extends ContainerWidget
             $this->showFile($event->getValue());
         });
         $this->add(new TextWidget($this->plain($this->path), truncate: true));
-        $this->add($this->list);
         $this->add($this->status);
+        $this->add($this->list);
         $this->refreshFiles();
         $this->list->setQuery($this->query, $this->selected);
 
@@ -134,107 +141,155 @@ class LogsPanel extends ContainerWidget
 
     private function showFile(string $name): void
     {
-        $this->clear();
-        $this->list = null;
         $this->currentFile = $name;
-        $this->contentQuery = '';
+        $this->recordQuery = '';
+        $this->recordSelection = null;
+        $this->recordSearchOpen = false;
+        $this->paused = false;
+        $this->following = true;
         $this->text = '';
         $this->identity = '';
         $this->size = 0;
         $this->readError = null;
-        $this->search = null;
-        $this->status = new TextWidget;
-        $this->status->setStyle(new Style(color: '#65727A'));
-        $this->output = new ScrollableText;
-        $this->output->addStyleClass('log-output');
-        $this->output->onInput($this->handleOutputInput(...));
-        $this->searchBar = new ContainerWidget;
-        $this->searchBar->setStyle(new Style(hidden: true));
-        $this->add(new TextWidget($this->plain($name), truncate: true));
-        $this->add($this->output);
-        $this->add($this->status);
-        $this->add($this->searchBar);
-        $this->output->followOutput();
+        $this->buffer = new LogBuffer;
+        $this->showRecords();
         $this->refreshFile(force: true);
-        $this->getContext()?->getFocusManager()->setFocus($this->output);
     }
 
-    private function handleOutputInput(string $data): bool
+    private function showRecords(): void
     {
-        if ($this->output === null) {
-            return false;
-        }
-
-        $keys = $this->output->getKeybindings();
-
-        if ($keys->matches($data, 'toggle_search')) {
-            $this->toggleContentSearch();
-        } elseif ($keys->matches($data, 'output_back')) {
-            if ($this->search !== null || $this->contentQuery !== '') {
-                $this->closeContentSearch(reset: true);
+        $this->clear();
+        $this->opened = null;
+        $this->list = null;
+        $this->detail = null;
+        $this->status = $this->makeStatus();
+        $this->records = new SearchableList([]);
+        $this->records->onInput($this->handleRecordInput(...));
+        $this->records->onCancel(function (): void {
+            if ($this->records?->isSearching() || $this->records?->query() !== '') {
+                $this->records?->closeSearch();
             } else {
                 $this->showFiles();
             }
-        } elseif ($keys->matches($data, 'logs_start')) {
-            $this->output->scrollToStart();
-        } elseif ($keys->matches($data, 'logs_follow')) {
-            $this->output->followOutput();
+        });
+        $this->records->onSelect(function (SelectEvent $event): void {
+            $record = $this->buffer->find($event->getValue());
+
+            if ($record === null) {
+                return;
+            }
+            $this->recordQuery = $this->records?->query() ?? '';
+            $this->recordSelection = $record->id;
+            $this->recordSearchOpen = $this->records?->isSearching() ?? false;
+            $this->following = false;
+            $this->showRecord($record);
+        });
+        $this->add(new TextWidget($this->plain($this->currentFile ?? ''), truncate: true));
+        $this->add($this->status);
+        $this->add($this->records);
+        $this->renderRecords();
+        $this->records->setQuery($this->recordQuery, $this->recordSelection);
+
+        if ($this->recordSearchOpen) {
+            $this->records->openSearch();
         } else {
+            $this->records->focus();
+        }
+        $this->updateStatus();
+    }
+
+    private function handleRecordInput(string $data): bool
+    {
+        $keys = $this->getContext()?->keybindings();
+
+        if ($keys === null) {
+            return false;
+        }
+
+        if ($this->matchesKey($data, 'logs_pause')) {
+            $this->paused = ! $this->paused;
+
+            if (! $this->paused) {
+                $this->refreshFile(force: true);
+            }
+        } elseif ($this->matchesKey($data, 'logs_level')) {
+            $this->buffer->cycleLevel();
+            $this->renderRecords();
+        } elseif ($keys->matches($data, 'logs_start')) {
+            $this->following = false;
+            $this->records?->selectIndex(0);
+        } elseif ($keys->matches($data, 'logs_follow')) {
+            $this->paused = false;
+            $this->following = true;
+            $this->refreshFile(force: true);
+        } else {
+            if ($keys->matches($data, 'output_line_up') || $keys->matches($data, 'output_line_down')
+                || $keys->matches($data, 'output_up') || $keys->matches($data, 'output_down')) {
+                $this->following = false;
+                $this->updateStatus();
+            }
+
             return false;
         }
         $this->updateStatus();
+        $this->getContext()?->requestRender();
 
         return true;
     }
 
-    private function toggleContentSearch(): void
+    private function showRecord(LogRecord $record): void
     {
-        if ($this->search !== null) {
-            $this->closeContentSearch();
+        $this->clear();
+        $this->records = null;
+        $this->opened = $record;
+        $this->status = $this->makeStatus();
+        $this->detail = new ScrollableText;
+        $this->detail->addStyleClass('log-output');
+        $this->detail->setText($record->details);
+        $this->detail->onInput(function (string $data): bool {
+            $keys = $this->detail?->getKeybindings();
 
-            return;
-        }
-
-        $this->search = new InputWidget;
-        $this->search->setPrompt('/ ');
-        $this->search->setValue($this->contentQuery);
-        $this->search->onChange(function (ChangeEvent $event): void {
-            $this->contentQuery = $event->getValue();
-            $this->renderOutput(reset: true);
-        });
-        $this->search->onSubmit(fn () => $this->closeContentSearch());
-        $this->search->onCancel(fn () => $this->closeContentSearch(reset: true));
-        $this->search->onInput(function (string $data): bool {
-            if (! ($this->search?->getKeybindings()->matches($data, 'toggle_search') ?? false)) {
+            if ($keys?->matches($data, 'output_back')) {
+                $this->showRecords();
+            } elseif ($keys?->matches($data, 'logs_start')) {
+                $this->detail->scrollToStart();
+            } elseif ($keys?->matches($data, 'logs_follow')) {
+                $this->detail->followOutput();
+            } else {
                 return false;
             }
 
-            $this->closeContentSearch();
-
             return true;
         });
-        $frame = new Panel('', '#39C5BB');
-        $frame->content()->add($this->search);
-        $this->searchBar?->add($frame);
-        $this->searchBar?->setStyle(new Style(hidden: false));
-        $this->getContext()?->getFocusManager()->setFocus($this->search);
+        $this->add(new TextWidget($this->plain($this->currentFile ?? '').' ['.$record->level.']', truncate: true));
+        $this->add($this->detail);
+        $this->add($this->status);
+        $this->updateStatus();
+        $this->getContext()?->getFocusManager()->setFocus($this->detail);
     }
 
-    private function closeContentSearch(bool $reset = false): void
+    private function matchesKey(string $data, string $action): bool
     {
-        $this->searchBar?->clear();
-        $this->searchBar?->setStyle(new Style(hidden: true));
-        $this->search = null;
+        $keys = $this->getContext()?->keybindings();
 
-        if ($reset) {
-            $this->contentQuery = '';
-            $this->renderOutput(reset: true);
+        if ($keys === null) {
+            return false;
         }
-        $this->getContext()?->getFocusManager()->setFocus($this->output);
+
+        $printable = $keys->getParser()->decodePrintable($data) ?? $data;
+        $key = strtr($printable, config('laravel-tui.key_aliases', []));
+
+        return $keys->matches($key, $action);
     }
 
     private function refreshFile(bool $force = false): void
     {
+        if ($this->frozen()) {
+            $this->updateStatus();
+
+            return;
+        }
+
         $oldSize = $this->size;
         $oldIdentity = $this->identity;
         $oldError = $this->readError;
@@ -249,11 +304,16 @@ class LogsPanel extends ContainerWidget
 
         if ($force || $text !== $this->text || $oldError !== $this->readError || $oldSize !== $this->size || $oldIdentity !== $this->identity) {
             $this->text = $text;
-            $replaced = $oldIdentity !== '' && ($oldIdentity !== $this->identity || $this->size < $oldSize);
-            $reset = $replaced && ! ($this->output?->isFollowingOutput() ?? false);
-            $this->renderOutput(reset: $reset);
+            $this->buffer->ingest($text);
+            $this->renderRecords();
         }
         $this->updateStatus();
+    }
+
+    private function frozen(): bool
+    {
+        return $this->paused || $this->opened !== null || ($this->records?->isSearching()
+            && $this->getContext()?->getFocusManager()->getFocus() instanceof InputWidget);
     }
 
     private function readTail(): string
@@ -302,54 +362,36 @@ class LogsPanel extends ContainerWidget
         }
     }
 
-    private function renderOutput(bool $reset = false): void
+    private function renderRecords(): void
     {
-        $pattern = '/(?=^\[\d{4}-\d{2}-\d{2}[^\r\n]*\]\s+\S+\.(?:EMERGENCY|ALERT|CRITICAL|ERROR|WARNING|NOTICE|INFO|DEBUG):)/mi';
-        $entries = trim($this->text) === '' ? [] : (preg_match($pattern, $this->text)
-            ? (preg_split($pattern, $this->text, -1, PREG_SPLIT_NO_EMPTY) ?: [])
-            : explode("\n", rtrim($this->text, "\n")));
-        $this->entries = count($entries);
-        $query = trim($this->contentQuery);
-        $filtered = array_values(array_filter($entries, static fn (string $entry): bool => $query === '' || mb_stripos($entry, $query) !== false));
-        $this->matches = count($filtered);
-        $text = implode("\n", array_map(static fn (string $entry): string => rtrim($entry, "\n"), $filtered));
+        $items = [];
 
-        if ($this->readError !== null) {
-            $text = $this->readError;
-        } elseif ($text === '') {
-            $text = match (true) {
-                $query !== '' => 'No matching entries in the loaded tail',
-                $this->size > $this->maxBytes => 'No complete lines in the loaded tail',
-                default => 'Log file is empty',
-            };
-        }
-
-        $this->output?->setText($this->colorize($text));
-
-        if ($reset) {
-            $this->output?->scrollToStart();
-        }
-        $this->updateStatus();
-        $this->getContext()?->requestRender();
-    }
-
-    private function colorize(string $text): string
-    {
-        return implode("\n", array_map(static function (string $line): string {
-            if (! preg_match('/\b[\w-]+\.(EMERGENCY|ALERT|CRITICAL|ERROR|WARNING|NOTICE|INFO|DEBUG):/i', $line, $match)) {
-                return $line;
-            }
-
-            $color = match (strtoupper($match[1])) {
+        foreach ($this->buffer->records() as $record) {
+            $color = match ($record->level) {
                 'EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR' => '#E879A9',
                 'WARNING' => '#E5C07B',
                 'NOTICE' => '#B4A7D6',
                 'INFO' => '#39C5BB',
                 default => '#65727A',
             };
+            $items[] = [
+                'value' => $record->id,
+                'label' => new Style(color: $color)->apply('['.$record->level.'] '.$record->message),
+                'search' => $record->raw."\n".$record->details,
+            ];
+        }
+        $this->records?->setItems($items);
 
-            return new Style(color: $color)->apply($line);
-        }, explode("\n", $text)));
+        if ($this->following) {
+            $this->records?->selectIndex(max(0, count($items) - 1));
+        }
+        $this->updateStatus();
+        $this->getContext()?->requestRender();
+    }
+
+    private function makeStatus(): TextWidget
+    {
+        return new TextWidget()->setStyle(new Style(color: '#65727A'));
     }
 
     private function updateStatus(): void
@@ -358,10 +400,17 @@ class LogsPanel extends ContainerWidget
             return;
         }
 
-        $mode = ($this->output?->isFollowingOutput() ?? false) ? 'Live' : 'Browsing';
-        $count = trim($this->contentQuery) === '' ? $this->entries.' entries' : $this->matches.'/'.$this->entries.' entries';
+        $mode = match (true) {
+            $this->opened !== null => 'Record',
+            $this->paused => 'Paused',
+            $this->frozen() => 'Searching',
+            $this->following => 'Live',
+            default => 'Browsing',
+        };
+        $count = ($this->records?->count() ?? 1).'/'.$this->buffer->count().' entries';
         $tail = $this->size > $this->maxBytes ? ' | last '.(int) ceil($this->maxBytes / 1024).' KiB' : '';
-        $this->status->setText($this->readError === null ? $mode.' | '.$count.$tail : 'File unavailable  retrying');
+        $error = $this->readError === null ? '' : ' | file unavailable';
+        $this->status->setText($mode.' | '.$this->buffer->level().' | '.$count.$tail.$error);
     }
 
     private function plain(string $text): string

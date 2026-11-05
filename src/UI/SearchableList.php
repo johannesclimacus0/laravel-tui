@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelTui\LaravelTui\UI;
 
+use Closure;
+use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Event\ChangeEvent;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Style\Style;
@@ -17,9 +19,13 @@ class SearchableList extends ContainerWidget
 
     private AdaptiveList $list;
 
-    private ContainerWidget $searchBar;
+    private Panel $searchBar;
 
     private bool $searching = false;
+
+    private int $filteredCount = 0;
+
+    private ?Closure $inputListener = null;
 
     /**
      * @param  list<array{value: string, label: string, search?: string}>  $items
@@ -28,19 +34,25 @@ class SearchableList extends ContainerWidget
         private array $items,
         private ?string $footerPrompt = null,
     ) {
+        $this->filteredCount = count($items);
         $this->input = new InputWidget;
         $this->input->setPrompt($footerPrompt ?? '/ ');
 
         $this->list = new AdaptiveList($this->listItems($items));
+        $this->list->expandVertically(true);
         $this->list->addStyleClass('module-menu');
         $this->list->onInput(function (string $data): bool {
+            if ($this->inputListener !== null && ($this->inputListener)($data)) {
+                return true;
+            }
+
             if ($this->footerPrompt !== null && $this->list->getKeybindings()->matches($data, 'complete_command')) {
                 $this->completeCommand();
 
                 return true;
             }
 
-            if (! $this->list->getKeybindings()->matches($data, 'toggle_search')) {
+            if (! $this->isSearchToggle($data)) {
                 return false;
             }
 
@@ -52,24 +64,18 @@ class SearchableList extends ContainerWidget
 
         $this->setStyle(new Style(gap: 1));
         $this->expandVertically(true);
-        $this->searchBar = new ContainerWidget;
+        $this->searchBar = new Panel('', '#39C5BB');
 
         if ($footerPrompt !== null) {
             $this->configureInput();
-            $this->list->expandVertically(true);
-            $frame = new Panel('', '#39C5BB');
-            $frame->content()->add($this->input);
-            $this->searchBar->add($frame);
+            $this->searchBar->content()->add($this->input);
             $this->searching = true;
-            $this->add($this->list);
-            $this->add($this->searchBar);
-
-            return;
+        } else {
+            $this->searchBar->setStyle(new Style(hidden: true));
         }
 
-        $this->searchBar->setStyle(new Style(hidden: true));
-        $this->add($this->searchBar);
         $this->add($this->list);
+        $this->add($this->searchBar);
     }
 
     /** @param callable(SelectEvent): void $callback */
@@ -88,6 +94,32 @@ class SearchableList extends ContainerWidget
     public function query(): string
     {
         return $this->input->getValue();
+    }
+
+    /** @param callable(string): bool $callback */
+    public function onInput(callable $callback): static
+    {
+        $this->inputListener = $callback(...);
+
+        return $this;
+    }
+
+    /** @param callable(): void $callback */
+    public function onCancel(callable $callback): static
+    {
+        $this->list->onCancel($callback);
+
+        return $this;
+    }
+
+    public function selectIndex(int $index): void
+    {
+        $this->list->setSelectedIndex($index);
+    }
+
+    public function count(): int
+    {
+        return $this->filteredCount;
     }
 
     public function selectedValue(): ?string
@@ -120,9 +152,10 @@ class SearchableList extends ContainerWidget
         $filtered = array_values(array_filter(
             $this->items,
             static fn (array $item): bool => $query === ''
-                || mb_stripos($item['label'].' '.($item['search'] ?? ''), $query) !== false,
+                || mb_stripos(AnsiUtils::stripAnsiCodes($item['label']).' '.($item['search'] ?? ''), $query) !== false,
         ));
         $this->list->setItems($this->listItems($filtered));
+        $this->filteredCount = count($filtered);
         $index = array_search($selected, array_column($filtered, 'value'), true);
 
         if ($index !== false) {
@@ -162,7 +195,7 @@ class SearchableList extends ContainerWidget
                 return false;
             }
 
-            if (! $this->input->getKeybindings()->matches($data, 'toggle_search')) {
+            if (! $this->isSearchToggle($data)) {
                 return false;
             }
 
@@ -199,11 +232,20 @@ class SearchableList extends ContainerWidget
         $this->openSearch();
     }
 
+    private function isSearchToggle(string $data): bool
+    {
+        $keys = $this->list->getKeybindings();
+        $printable = $keys->getParser()->decodePrintable($data) ?? $data;
+        $key = strtr($printable, config('laravel-tui.key_aliases', []));
+
+        return $keys->matches($key, 'toggle_search');
+    }
+
     public function openSearch(): void
     {
         if (! $this->searching) {
             $this->configureInput();
-            $this->searchBar->add($this->input);
+            $this->searchBar->content()->add($this->input);
             $this->searchBar->setStyle(new Style(hidden: false));
             $this->searching = true;
         }
@@ -211,11 +253,10 @@ class SearchableList extends ContainerWidget
         $this->getContext()?->getFocusManager()->setFocus($this->input);
     }
 
-    private function closeSearch(bool $reset = true): void
+    public function closeSearch(bool $reset = true): void
     {
         if ($reset) {
-            $this->input->setValue('');
-            $this->list->setItems($this->listItems($this->items));
+            $this->setQuery('');
         }
 
         if ($this->footerPrompt !== null) {
@@ -224,7 +265,7 @@ class SearchableList extends ContainerWidget
             return;
         }
 
-        $this->searchBar->remove($this->input);
+        $this->searchBar->content()->remove($this->input);
         $this->searchBar->setStyle(new Style(hidden: true));
         $this->searching = false;
         $this->getContext()?->getFocusManager()->setFocus($this->list);

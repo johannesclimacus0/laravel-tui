@@ -113,6 +113,7 @@ class ArtisanPanel extends ContainerWidget
             return ! $keys->matches($data, 'select_cancel') && ($this->process?->isRunning() ?? false);
         });
         $this->status = new TextWidget;
+        $this->status->setStyle(new Style(hidden: true));
 
         $this->output = new ScrollableText;
         $this->output->addStyleClass('command-output');
@@ -179,6 +180,7 @@ class ArtisanPanel extends ContainerWidget
         }
 
         $this->stopPolling();
+        $this->status->setStyle(new Style(hidden: false));
 
         try {
             $this->process = $this->runner->start($name, $this->arguments->getValue());
