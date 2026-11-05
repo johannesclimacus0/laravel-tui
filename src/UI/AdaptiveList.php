@@ -18,6 +18,8 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
 
     private ?Closure $inputCallback = null;
 
+    private string $emptyMessage = 'No items available';
+
     /** @param list<array{value: string, label: string}> $items */
     public function __construct(private array $items)
     {
@@ -27,7 +29,11 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
     public function render(RenderContext $context): array
     {
         if ($this->items === []) {
-            return parent::render($context);
+            return $this->emptyMessage === '' ? [] : [$this->applyElement('no-match', AnsiUtils::truncateToWidth(
+                $this->emptyMessage,
+                $context->getColumns(),
+                '',
+            ))];
         }
 
         $rows = max(1, (int) floor($context->getRows() * ($this->expanded ? 1 : 0.85)));
@@ -103,6 +109,14 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
         $this->invalidate();
 
         return $this;
+    }
+
+    public function setEmptyMessage(string $message): void
+    {
+        if ($this->emptyMessage !== $message) {
+            $this->emptyMessage = $message;
+            $this->invalidate();
+        }
     }
 
     public function isVerticallyExpanded(): bool

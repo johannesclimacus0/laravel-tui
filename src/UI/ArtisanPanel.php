@@ -18,7 +18,6 @@ use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\InputWidget;
-use Symfony\Component\Tui\Widget\TextWidget;
 use Symfony\Component\Tui\Widget\Util\StringUtils;
 use Symfony\Component\Tui\Widget\WidgetContext;
 use Throwable;
@@ -33,7 +32,7 @@ class ArtisanPanel extends ContainerWidget
 
     private InputWidget $arguments;
 
-    private TextWidget $status;
+    private StatusLine $status;
 
     private ScrollableText $output;
 
@@ -67,7 +66,7 @@ class ArtisanPanel extends ContainerWidget
         foreach ($this->commands as $name => $command) {
             $items[] = ['value' => $name, 'label' => $name, 'search' => $command->getDescription()];
         }
-        $list = new SearchableList($items, footerPrompt: $this->commandPrompt());
+        $list = new SearchableList($items, footerPrompt: $this->commandPrompt(), emptyMessage: 'No commands available');
         $list->setQuery($this->browserQuery, $this->browserSelection);
         $list->onSelect(function (SelectEvent $event) use ($list): void {
             $this->browserQuery = $list->query();
@@ -112,8 +111,7 @@ class ArtisanPanel extends ContainerWidget
 
             return ! $keys->matches($data, 'select_cancel') && ($this->process?->isRunning() ?? false);
         });
-        $this->status = new TextWidget;
-        $this->status->setStyle(new Style(hidden: true));
+        $this->status = new StatusLine;
 
         $this->output = new ScrollableText;
         $this->output->addStyleClass('command-output');
@@ -130,7 +128,7 @@ class ArtisanPanel extends ContainerWidget
         $this->add($this->output);
         $this->add($this->status);
 
-        $entry = new Panel('', '#39C5BB');
+        $entry = new Panel('', config('laravel-tui.theme.focus', '#6DE2D5'));
         $entry->content()->add($this->arguments);
         $this->add($entry);
         $this->getContext()?->getFocusManager()->setFocus($this->arguments);
@@ -138,7 +136,7 @@ class ArtisanPanel extends ContainerWidget
 
     private function commandPrompt(string $name = ''): string
     {
-        $prefix = (new Style(color: '#65727A'))->apply('php artisan');
+        $prefix = (new Style(color: config('laravel-tui.theme.muted', '#65727A')))->apply('php artisan');
 
         return '> '.$prefix.($name === '' ? ' ' : ' '.$name.' ');
     }
@@ -180,7 +178,6 @@ class ArtisanPanel extends ContainerWidget
         }
 
         $this->stopPolling();
-        $this->status->setStyle(new Style(hidden: false));
 
         try {
             $this->process = $this->runner->start($name, $this->arguments->getValue());
@@ -195,12 +192,12 @@ class ArtisanPanel extends ContainerWidget
             $this->buffer = '';
             $this->output->setText('');
             $this->output->followOutput();
-            $this->status->setText('Running…');
+            $this->status->setStatus('Running', 'php artisan '.$name, 'info');
             $this->tickId = $this->getContext()?->scheduleTick($this->poll(...), 0.1);
             $this->getContext()?->getFocusManager()->setFocus($this->output);
             $this->poll();
         } catch (Throwable $error) {
-            $this->status->setText('Could not start command.');
+            $this->status->setStatus('Error', 'Could not start command', 'error');
             $this->output->setText($this->plain($error->getMessage()));
             $this->getContext()?->getFocusManager()->setFocus($this->output);
         }
@@ -224,7 +221,16 @@ class ArtisanPanel extends ContainerWidget
 
         if (! $running) {
             $this->stopPolling();
-            $this->status->setText('Finished. Exit code: '.($this->process->getExitCode() ?? 'unknown'));
+            $exitCode = $this->process->getExitCode();
+            $this->status->setStatus(
+                $exitCode === 0 ? 'Done' : 'Failed',
+                'Exit code: '.($exitCode ?? 'unknown'),
+                $exitCode === 0 ? 'success' : 'error',
+            );
+
+            if ($this->buffer === '') {
+                $this->output->setText('Command produced no output');
+            }
         }
         $this->getContext()?->requestRender();
     }
@@ -250,7 +256,7 @@ class ArtisanPanel extends ContainerWidget
 
         $this->process->stop(0.2);
         $this->poll();
-        $this->status->setText('Cancelled.');
+        $this->status->setStatus('Cancelled', 'Command stopped', 'warning');
 
         return true;
     }

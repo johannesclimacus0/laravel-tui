@@ -65,15 +65,17 @@ class Dashboard
         $keys = new Keybindings($keybindings);
         $tui = new Tui(keybindings: $keys);
 
-        $accent = '#39C5BB';
-        $muted = '#65727A';
-        $pink = '#E879A9';
+        $accent = config('laravel-tui.theme.focus', '#6DE2D5');
+        $muted = config('laravel-tui.theme.muted', '#65727A');
+        $selection = config('laravel-tui.theme.selection', '#39C5BB');
 
         $tui->addStyleSheet(new StyleSheet([
-            '.module-menu::selected' => new Style(color: $accent, bold: true),
-            '.module-menu::selected:focus' => new Style(color: $accent, bold: true),
-            '.command-output::selected' => new Style(color: $accent, bold: true),
-            '.log-output::selected' => new Style(color: $accent, bold: true),
+            '*' => new Style(color: config('laravel-tui.theme.text', 'default')),
+            '.module-menu::selected' => new Style(color: config('laravel-tui.theme.selection_inactive', '#39C5BB'), bold: false),
+            '.module-menu::selected:focus' => new Style(color: $selection, bold: true),
+            '.module-menu::no-match' => new Style(color: $muted),
+            '.command-output::selected' => new Style(color: $selection, bold: true),
+            '.log-output::selected' => new Style(color: $selection, bold: true),
         ]));
 
         // Project panel
@@ -122,7 +124,12 @@ class Dashboard
         $sidebar->add($artPanel);
 
         // Initial module content
-        $workspace = new Panel($labels[$modules[0]->id()], $pink, expanded: true);
+        $workspace = new Panel(
+            $labels[$modules[0]->id()],
+            config('laravel-tui.theme.workspace_focus', '#F4A6C8'),
+            expanded: true,
+            inactiveColor: config('laravel-tui.theme.workspace_border', '#E879A9'),
+        );
         $workspace->setStyle(new Style(flex: 1));
         $content = $workspace->content();
         $content->add($modules[0]->widget());
