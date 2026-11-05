@@ -20,10 +20,8 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
 
     public function render(RenderContext $context): array
     {
-        $lines = parent::render($context);
-
         if ($this->items === []) {
-            return $lines;
+            return parent::render($context);
         }
 
         $rows = max(1, (int) floor($context->getRows() * ($this->expanded ? 1 : 0.85)));
@@ -33,7 +31,12 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
         $selected = array_search($this->getSelectedItem()['value'] ?? '', array_column($this->items, 'value'), true);
         $index = $selected === false ? 0 : $selected;
         $start = max(0, min($index - intdiv($visible, 2), $count - $visible));
-        $window = array_slice($lines, $start, $visible);
+        $window = [];
+
+        foreach (array_slice($this->items, $start, $visible) as $offset => $item) {
+            $line = AnsiUtils::truncateToWidth($item['label'], $context->getColumns(), '');
+            $window[] = $start + $offset === $index ? $this->applyElement('selected', $line) : $line;
+        }
 
         if ($scrolling && $rows > 1) {
             $window[] = $this->applyElement('scroll-info', AnsiUtils::truncateToWidth(

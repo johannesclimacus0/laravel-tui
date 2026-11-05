@@ -50,6 +50,11 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
         $this->invalidate();
     }
 
+    public function isFollowingOutput(): bool
+    {
+        return $this->following;
+    }
+
     public function scrollToStart(): void
     {
         $this->following = false;

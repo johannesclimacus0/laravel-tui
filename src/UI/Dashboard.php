@@ -73,6 +73,7 @@ class Dashboard
             '.module-menu::selected' => new Style(color: $accent, bold: true),
             '.module-menu::selected:focus' => new Style(color: $accent, bold: true),
             '.command-output::selected' => new Style(color: $accent, bold: true),
+            '.log-output::selected' => new Style(color: $accent, bold: true),
         ]));
 
         // Project panel

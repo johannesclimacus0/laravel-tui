@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
-use LaravelTui\LaravelTui\Modules\OverviewModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
+use LaravelTui\LaravelTui\Modules\OverviewModule;
 
 return [
     'modules' => [
@@ -28,6 +28,8 @@ return [
         'history_previous' => ['up'],
         'history_next' => ['down'],
         'complete_command' => ['right'],
+        'logs_start' => ['home'],
+        'logs_follow' => ['end'],
     ],
 
     'artisan' => [
@@ -51,6 +53,7 @@ return [
         'modules' => [
             'overview' => 'mliku',
             'artisan' => 'miku.exe',
+            'logs' => 'mikudayo',
         ],
     ],
 
@@ -66,6 +69,7 @@ return [
             'overview' => "\u{f015}",
             'example' => "\u{f121}",
             'artisan' => "\u{f011b}",
+            'logs' => "\u{f0219}",
         ],
     ],
 
@@ -83,9 +87,14 @@ return [
         'artisan' => [
             'maybe later',
         ],
+        'logs' => [
+            'the logs remember everything.',
+        ],
     ],
 
     'logs' => [
         'path' => storage_path('logs'),
-    ]
+        'max_bytes' => 262144,
+        'refresh_interval' => 0.5,
+    ],
 ];

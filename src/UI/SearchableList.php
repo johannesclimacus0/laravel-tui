@@ -95,6 +95,19 @@ class SearchableList extends ContainerWidget
         return $this->list->getSelectedItem()['value'] ?? null;
     }
 
+    public function isSearching(): bool
+    {
+        return $this->searching;
+    }
+
+    /** @param list<array{value: string, label: string, search?: string}> $items */
+    public function setItems(array $items): void
+    {
+        $selected = $this->selectedValue();
+        $this->items = $items;
+        $this->filter($this->query(), $selected);
+    }
+
     public function setQuery(string $query, ?string $selected = null): void
     {
         $this->input->setValue($query);
@@ -186,7 +199,7 @@ class SearchableList extends ContainerWidget
         $this->openSearch();
     }
 
-    private function openSearch(): void
+    public function openSearch(): void
     {
         if (! $this->searching) {
             $this->configureInput();
