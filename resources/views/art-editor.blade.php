@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Laravel TUI · Miku colors</title>
+    <title>Laravel TUI | Miku colors</title>
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="data-url" content="{{ route('laravel-tui.editor.data') }}" />
     <meta name="save-url" content="{{ route('laravel-tui.editor.save') }}" />
@@ -40,8 +40,8 @@
             >
           </div>
           <div class="history">
-            <button id="undo" disabled title="Undo · Ctrl+Z">&lt;--</button>
-            <button id="redo" disabled title="Redo · Ctrl+Shift+Z">
+            <button id="undo" disabled title="Undo | Ctrl+Z">&lt;--</button>
+            <button id="redo" disabled title="Redo | Ctrl+Shift+Z">
               --&gt;
             </button>
           </div>

@@ -73,6 +73,7 @@ class Dashboard
             '.module-menu::selected' => new Style(color: $accent, bold: true),
             '.module-menu::selected:focus' => new Style(color: $accent, bold: true),
             '.command-output::selected' => new Style(color: $accent, bold: true),
+            '.log-output::selected' => new Style(color: $accent, bold: true),
         ]));
 
         // Project panel
@@ -185,7 +186,8 @@ class Dashboard
                 return;
             }
 
-            $key = strtr($event->getData(), $keyAliases);
+            $printable = $keys->getParser()->decodePrintable($event->getData()) ?? $event->getData();
+            $key = strtr($printable, $keyAliases);
 
             if ($keys->matches($key, 'quit')) {
                 $event->stopPropagation();

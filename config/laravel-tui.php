@@ -3,20 +3,20 @@
 declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
-use LaravelTui\LaravelTui\Modules\ExampleModule;
+use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
 
 return [
     'modules' => [
         OverviewModule::class,
-        ExampleModule::class,
         ArtisanModule::class,
+        LogsModule::class,
     ],
 
     'keybindings' => [
         'quit' => ['q', 'ctrl+c'],
         'cycle_art' => ['a'],
-        'toggle_search' => ['/', '.'],
+        'toggle_search' => ['/'],
         'focus_next' => ['tab'],
         'focus_previous' => ['shift+tab'],
         'interrupt' => ['ctrl+c'],
@@ -28,12 +28,10 @@ return [
         'history_previous' => ['up'],
         'history_next' => ['down'],
         'complete_command' => ['right'],
-    ],
-
-    'artisan' => [
-        'exclude' => [],
-        'command' => [PHP_BINARY, base_path('artisan')],
-        'working_directory' => base_path(),
+        'logs_start' => ['ctrl+up'],
+        'logs_follow' => ['ctrl+down'],
+        'logs_level' => ['f'],
+        'logs_pause' => ['p'],
     ],
 
     'key_aliases' => [
@@ -43,6 +41,19 @@ return [
         'A' => 'a',
         'ф' => 'a',
         'Ф' => 'a',
+        'F' => 'f',
+        'а' => 'f',
+        'А' => 'f',
+        'P' => 'p',
+        'з' => 'p',
+        'З' => 'p',
+        '.' => '/',
+    ],
+
+    'artisan' => [
+        'exclude' => [],
+        'command' => [PHP_BINARY, base_path('artisan')],
+        'working_directory' => base_path(),
     ],
 
     'art' => [
@@ -50,8 +61,8 @@ return [
         'default' => 'mliku',
         'modules' => [
             'overview' => 'mliku',
-            'example' => 'popipoipo',
             'artisan' => 'miku.exe',
+            'logs' => 'mikudayo',
         ],
     ],
 
@@ -67,6 +78,7 @@ return [
             'overview' => "\u{f015}",
             'example' => "\u{f121}",
             'artisan' => "\u{f011b}",
+            'logs' => "\u{f0219}",
         ],
     ],
 
@@ -84,5 +96,14 @@ return [
         'artisan' => [
             'maybe later',
         ],
+        'logs' => [
+            'maybe later',
+        ],
+    ],
+
+    'logs' => [
+        'path' => storage_path('logs'),
+        'max_bytes' => 262144,
+        'refresh_interval' => 0.5,
     ],
 ];
