@@ -19,6 +19,17 @@ return [
         'toggle_search' => ['/', '.'],
         'focus_next' => ['tab'],
         'focus_previous' => ['shift+tab'],
+        'interrupt' => ['ctrl+c'],
+        'output_up' => ['page_up'],
+        'output_down' => ['page_down'],
+        'output_line_up' => ['up'],
+        'output_line_down' => ['down'],
+        'output_back' => ['escape'],
+    ],
+
+    'artisan' => [
+        'command' => [PHP_BINARY, base_path('artisan')],
+        'working_directory' => base_path(),
     ],
 
     'key_aliases' => [

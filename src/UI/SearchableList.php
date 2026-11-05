@@ -57,6 +57,11 @@ class SearchableList extends ContainerWidget
         return $this;
     }
 
+    public function focus(): void
+    {
+        $this->getContext()?->getFocusManager()->setFocus($this->list);
+    }
+
     private function configureInput(): void
     {
         $this->input->onInput(function (string $data): bool {

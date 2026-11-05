@@ -72,6 +72,7 @@ class Dashboard
         $tui->addStyleSheet(new StyleSheet([
             '.module-menu::selected' => new Style(color: $accent, bold: true),
             '.module-menu::selected:focus' => new Style(color: $accent, bold: true),
+            '.command-output::selected' => new Style(color: $accent, bold: true),
         ]));
 
         // Project panel
@@ -200,7 +201,12 @@ class Dashboard
         });
 
         $tui->setFocus($menu);
-        $tui->run();
+
+        try {
+            $tui->run();
+        } finally {
+            $content->clear();
+        }
     }
 
     /**
