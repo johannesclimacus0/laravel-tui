@@ -73,6 +73,7 @@ class Dashboard
             '*' => new Style(color: config('laravel-tui.theme.text', 'default')),
             '.module-menu::selected' => new Style(color: config('laravel-tui.theme.selection_inactive', '#39C5BB'), bold: false),
             '.module-menu::selected:focus' => new Style(color: $selection, bold: true),
+            '.module-menu::no-match' => new Style(color: $muted),
             '.command-output::selected' => new Style(color: $selection, bold: true),
             '.log-output::selected' => new Style(color: $selection, bold: true),
         ]));

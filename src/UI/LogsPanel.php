@@ -36,7 +36,7 @@ class LogsPanel extends ContainerWidget
 
     private ?LogRecord $opened = null;
 
-    private TextWidget $status;
+    private StatusLine $status;
 
     private LogBuffer $buffer;
 
@@ -109,6 +109,7 @@ class LogsPanel extends ContainerWidget
     {
         clearstatcache();
         $items = [];
+        $available = true;
 
         try {
             if (! $this->files->isDirectory($this->path) || ! is_readable($this->path)) {
@@ -123,9 +124,10 @@ class LogsPanel extends ContainerWidget
                 $items[] = ['value' => $file->getFilename(), 'label' => $this->plain($file->getFilename())];
             }
             usort($items, static fn (array $left, array $right): int => strnatcasecmp($left['label'], $right['label']));
-            $message = $items === [] ? 'No log files found' : count($items).' log files';
+            $message = count($items).' log files';
         } catch (Throwable) {
             $items = [];
+            $available = false;
             $message = 'Log directory is unavailable';
         }
 
@@ -133,8 +135,14 @@ class LogsPanel extends ContainerWidget
 
         if ($signature !== $this->fileSignature) {
             $this->fileSignature = $signature;
+            $this->list?->setEmptyMessage($available ? 'No log files found' : '');
             $this->list?->setItems($items);
-            $this->status->setText($message);
+
+            if ($available) {
+                $this->status->hide();
+            } else {
+                $this->status->setStatus('Error', $message, 'error');
+            }
             $this->getContext()?->requestRender();
         }
     }
@@ -365,11 +373,19 @@ class LogsPanel extends ContainerWidget
     private function renderRecords(): void
     {
         $items = [];
+        $emptyMessage = match (true) {
+            $this->readError !== null => '',
+            $this->buffer->count() === 0 && $this->size === 0 => 'Log file is empty',
+            $this->buffer->count() === 0 && $this->size > $this->maxBytes => 'No complete records in the loaded tail',
+            $this->buffer->count() === 0 => 'No records in the loaded tail',
+            default => 'No entries at level '.$this->buffer->level().' or higher',
+        };
+        $this->records?->setEmptyMessage($emptyMessage);
 
         foreach ($this->buffer->records() as $record) {
             $color = match ($record->level) {
-                'EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR' => '#E879A9',
-                'WARNING' => '#E5C07B',
+                'EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR' => config('laravel-tui.theme.error', '#E879A9'),
+                'WARNING' => config('laravel-tui.theme.warning', '#E5C07B'),
                 'NOTICE' => '#B4A7D6',
                 'INFO' => '#39C5BB',
                 default => '#65727A',
@@ -389,9 +405,9 @@ class LogsPanel extends ContainerWidget
         $this->getContext()?->requestRender();
     }
 
-    private function makeStatus(): TextWidget
+    private function makeStatus(): StatusLine
     {
-        return new TextWidget()->setStyle(new Style(color: config('laravel-tui.theme.muted', '#65727A')));
+        return new StatusLine;
     }
 
     private function updateStatus(): void
@@ -400,17 +416,34 @@ class LogsPanel extends ContainerWidget
             return;
         }
 
+        if ($this->opened !== null) {
+            $this->status->setStatus('Record', 'Snapshot | updates paused');
+
+            return;
+        }
+
+        if ($this->readError !== null) {
+            $retry = $this->frozen() ? 'updates paused' : 'retrying';
+            $this->status->setStatus('Error', $this->readError.' | '.$retry, 'error');
+
+            return;
+        }
+
         $mode = match (true) {
-            $this->opened !== null => 'Record',
             $this->paused => 'Paused',
             $this->frozen() => 'Searching',
             $this->following => 'Live',
             default => 'Browsing',
         };
-        $count = ($this->records?->count() ?? 1).'/'.$this->buffer->count().' entries';
+        $tone = match ($mode) {
+            'Live' => 'success',
+            'Paused' => 'warning',
+            'Searching' => 'info',
+            default => 'muted',
+        };
+        $count = ($this->records?->count() ?? 0).'/'.$this->buffer->count().' entries';
         $tail = $this->size > $this->maxBytes ? ' | last '.(int) ceil($this->maxBytes / 1024).' KiB' : '';
-        $error = $this->readError === null ? '' : ' | file unavailable';
-        $this->status->setText($mode.' | '.$this->buffer->level().' | '.$count.$tail.$error);
+        $this->status->setStatus($mode, $this->buffer->level().' | '.$count.$tail, $tone);
     }
 
     private function plain(string $text): string

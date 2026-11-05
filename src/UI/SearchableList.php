@@ -33,12 +33,14 @@ class SearchableList extends ContainerWidget
     public function __construct(
         private array $items,
         private ?string $footerPrompt = null,
+        private string $emptyMessage = 'No items available',
     ) {
         $this->filteredCount = count($items);
         $this->input = new InputWidget;
         $this->input->setPrompt($footerPrompt ?? '/ ');
 
         $this->list = new AdaptiveList($this->listItems($items));
+        $this->list->setEmptyMessage($emptyMessage);
         $this->list->expandVertically(true);
         $this->list->addStyleClass('module-menu');
         $this->list->onInput(function (string $data): bool {
@@ -122,6 +124,12 @@ class SearchableList extends ContainerWidget
         return $this->filteredCount;
     }
 
+    public function setEmptyMessage(string $message): void
+    {
+        $this->emptyMessage = $message;
+        $this->updateEmptyMessage();
+    }
+
     public function selectedValue(): ?string
     {
         return $this->list->getSelectedItem()['value'] ?? null;
@@ -156,6 +164,7 @@ class SearchableList extends ContainerWidget
         ));
         $this->list->setItems($this->listItems($filtered));
         $this->filteredCount = count($filtered);
+        $this->updateEmptyMessage();
         $index = array_search($selected, array_column($filtered, 'value'), true);
 
         if ($index !== false) {
@@ -171,6 +180,14 @@ class SearchableList extends ContainerWidget
             $this->setQuery($selected, $selected);
             $this->getContext()?->requestRender();
         }
+    }
+
+    private function updateEmptyMessage(): void
+    {
+        $message = $this->emptyMessage === '' || trim($this->query()) === ''
+            ? $this->emptyMessage
+            : '';
+        $this->list->setEmptyMessage($message);
     }
 
     private function configureInput(): void

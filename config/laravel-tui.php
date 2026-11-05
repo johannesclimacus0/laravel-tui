@@ -22,6 +22,8 @@ return [
         'workspace_focus' => '#F4A6C8',
         'selection' => '#39C5BB',
         'selection_inactive' => '#39C5BB',
+        'warning' => '#E5C07B',
+        'error' => '#E879A9',
     ],
 
     'keybindings' => [

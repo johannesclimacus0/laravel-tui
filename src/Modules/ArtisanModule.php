@@ -8,8 +8,8 @@ use Illuminate\Contracts\Console\Kernel;
 use LaravelTui\LaravelTui\Console\ArtisanRunner;
 use LaravelTui\LaravelTui\Contracts\Module;
 use LaravelTui\LaravelTui\UI\ArtisanPanel;
+use LaravelTui\LaravelTui\UI\StatusLine;
 use Symfony\Component\Tui\Widget\AbstractWidget;
-use Symfony\Component\Tui\Widget\TextWidget;
 
 class ArtisanModule implements Module
 {
@@ -45,7 +45,10 @@ class ArtisanModule implements Module
         }
 
         if ($available === []) {
-            return new TextWidget('No commands available.');
+            $status = new StatusLine;
+            $status->setStatus('Empty', 'No commands available');
+
+            return $status;
         }
 
         return new ArtisanPanel($available, $this->runner);
