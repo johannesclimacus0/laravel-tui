@@ -5,12 +5,14 @@ declare(strict_types=1);
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
+use LaravelTui\LaravelTui\Modules\QueueModule;
 
 return [
     'modules' => [
         OverviewModule::class,
         ArtisanModule::class,
         LogsModule::class,
+        QueueModule::class,
     ],
 
     'theme' => [
@@ -45,6 +47,11 @@ return [
         'logs_follow' => ['ctrl+down'],
         'logs_level' => ['f'],
         'logs_pause' => ['p'],
+        'queue_refresh' => ['r'],
+        'queue_retry' => ['t'],
+        'queue_forget' => ['d'],
+        'queue_confirm' => ['y'],
+        'queue_cancel' => ['n', 'escape'],
     ],
 
     'key_aliases' => [
@@ -61,6 +68,21 @@ return [
         'з' => 'p',
         'З' => 'p',
         '.' => '/',
+        'R' => 'r',
+        'к' => 'r',
+        'К' => 'r',
+        'T' => 't',
+        'е' => 't',
+        'Е' => 't',
+        'D' => 'd',
+        'в' => 'd',
+        'В' => 'd',
+        'Y' => 'y',
+        'н' => 'y',
+        'Н' => 'y',
+        'N' => 'n',
+        'т' => 'n',
+        'Т' => 'n',
     ],
 
     'artisan' => [
@@ -76,6 +98,7 @@ return [
             'overview' => 'mliku',
             'artisan' => 'miku.exe',
             'logs' => 'mikudayo',
+            'queue' => 'mikumiku',
         ],
     ],
 
@@ -92,6 +115,7 @@ return [
             'example' => "\u{f121}",
             'artisan' => "\u{f011b}",
             'logs' => "\u{f0219}",
+            'queue' => "\u{f0ae}",
         ],
     ],
 
@@ -112,11 +136,25 @@ return [
         'logs' => [
             'maybe later',
         ],
+        'queue' => [
+            'maybe later',
+        ],
     ],
 
     'logs' => [
         'path' => storage_path('logs'),
         'max_bytes' => 262144,
         'refresh_interval' => 0.5,
+    ],
+
+    'queue' => [
+        'connections' => [],
+        'queues' => [],
+        'refresh_interval' => 2,
+        'timeout' => 8,
+        'action_timeout' => 30,
+        'failed_limit' => 50,
+        'max_detail_bytes' => 65536,
+        'allow_actions' => true,
     ],
 ];

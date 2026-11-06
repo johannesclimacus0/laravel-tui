@@ -27,12 +27,21 @@ class StatusLine extends TextWidget
         };
         $text = '['.$label.']'.($details === '' ? '' : ' '.$details);
         $text = str_replace(["\r", "\n", "\t"], ' ', $text);
-        $this->setText(StringUtils::stripControlBytes(StringUtils::sanitizeUtf8($text)));
-        $this->setStyle(new Style(color: $color, hidden: false));
+        $text = StringUtils::stripControlBytes(StringUtils::sanitizeUtf8($text));
+        $style = new Style(color: $color, hidden: false);
+
+        if ($this->getText() === $text && $this->getStyle() == $style) {
+            return;
+        }
+        $this->setText($text);
+        $this->setStyle($style);
     }
 
     public function hide(): void
     {
+        if ($this->getStyle()?->getHidden() === true) {
+            return;
+        }
         $this->setStyle(new Style(hidden: true));
     }
 }
