@@ -5,6 +5,7 @@ declare(strict_types=1);
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
+use LaravelTui\LaravelTui\Modules\QueueModule;
 use LaravelTui\LaravelTui\Modules\SchedulerModule;
 
 return [
@@ -13,6 +14,7 @@ return [
         ArtisanModule::class,
         LogsModule::class,
         SchedulerModule::class,
+        QueueModule::class,
     ],
 
     'theme' => [
@@ -48,6 +50,11 @@ return [
         'logs_level' => ['f'],
         'logs_pause' => ['p'],
         'scheduler_refresh' => ['r'],
+        'queue_refresh' => ['r'],
+        'queue_retry' => ['t'],
+        'queue_forget' => ['d'],
+        'queue_confirm' => ['y'],
+        'queue_cancel' => ['n', 'escape'],
     ],
 
     'key_aliases' => [
@@ -67,6 +74,18 @@ return [
         'з' => 'p',
         'З' => 'p',
         '.' => '/',
+        'T' => 't',
+        'е' => 't',
+        'Е' => 't',
+        'D' => 'd',
+        'в' => 'd',
+        'В' => 'd',
+        'Y' => 'y',
+        'н' => 'y',
+        'Н' => 'y',
+        'N' => 'n',
+        'т' => 'n',
+        'Т' => 'n',
     ],
 
     'artisan' => [
@@ -83,6 +102,7 @@ return [
             'artisan' => 'miku.exe',
             'logs' => 'mikudayo',
             'scheduler' => 'mikumiku',
+            'queue' => 'mikumiku',
         ],
     ],
 
@@ -100,6 +120,7 @@ return [
             'artisan' => "\u{f011b}",
             'logs' => "\u{f0219}",
             'scheduler' => "\u{f0954}",
+            'queue' => "\u{f0ae}",
         ],
     ],
 
@@ -123,11 +144,25 @@ return [
         'scheduler' => [
             'maybe later',
         ],
+        'queue' => [
+            'maybe later',
+        ],
     ],
 
     'logs' => [
         'path' => storage_path('logs'),
         'max_bytes' => 262144,
         'refresh_interval' => 0.5,
+    ],
+
+    'queue' => [
+        'connections' => [],
+        'queues' => [],
+        'refresh_interval' => 2,
+        'timeout' => 8,
+        'action_timeout' => 30,
+        'failed_limit' => 50,
+        'max_detail_bytes' => 65536,
+        'allow_actions' => true,
     ],
 ];
