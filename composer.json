@@ -1,13 +1,19 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
     "name": "johannesclimacus/laravel-tui",
-    "description": "A modular Laravel terminal dashboard with colored text art and a browser color editor.",
+    "type": "library",
+    "description": "TUI for Laravel",
     "keywords": [
         "laravel",
+        "tui",
+        "terminal",
+        "dashboard",
+        "miku",
+        "hatsune-miku",
         "johannesclimacus",
         "laravel-tui"
     ],
-    "homepage": "https://github.com/johannesclimacus/laravel-tui",
+    "homepage": "https://github.com/johannesclimacus0/laravel-tui",
     "license": "MIT",
     "authors": [
         {
