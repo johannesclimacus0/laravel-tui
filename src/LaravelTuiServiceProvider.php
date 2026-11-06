@@ -12,6 +12,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use LaravelTui\LaravelTui\Art\ArtRepository;
 use LaravelTui\LaravelTui\Console\ArtisanRunner;
+use LaravelTui\LaravelTui\Console\Commands\DatabaseDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\LaravelTuiCommand;
 use LaravelTui\LaravelTui\Console\Commands\MigrationDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\QueueDataCommand;
@@ -69,6 +70,7 @@ class LaravelTuiServiceProvider extends ServiceProvider
 
         $this->commands([
             LaravelTuiCommand::class,
+            DatabaseDataCommand::class,
             MigrationDataCommand::class,
             QueueDataCommand::class,
             RetryQueueJobCommand::class,
