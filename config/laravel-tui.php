@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
+use LaravelTui\LaravelTui\Modules\ChecksModule;
 use LaravelTui\LaravelTui\Modules\DatabaseModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\MigrationsModule;
@@ -21,6 +22,7 @@ return [
         MigrationsModule::class,
         DatabaseModule::class,
         RoutesModule::class,
+        ChecksModule::class,
     ],
 
     'mouse' => [
@@ -64,6 +66,7 @@ return [
         'scheduler_refresh' => ['r'],
         'migrations_refresh' => ['r'],
         'routes_refresh' => ['r'],
+        'checks_run' => ['r'],
         'database_refresh' => ['r'],
         'database_next' => ['n'],
         'database_previous' => ['p'],
@@ -125,6 +128,7 @@ return [
             'migrations' => 'leek-spin',
             'database' => 'mikudayo',
             'routes' => 'miku.exe',
+            'checks' => '1',
         ],
     ],
 
@@ -146,6 +150,7 @@ return [
             'migrations' => "\u{f021}",
             'database' => "\u{f1c0}",
             'routes' => "\u{f126}",
+            'checks' => "\u{f046}",
         ],
     ],
 
@@ -180,6 +185,23 @@ return [
         ],
         'routes' => [
             'maybe later',
+        ],
+        'checks' => [
+            'maybe later',
+        ],
+    ],
+
+    'checks' => [
+        'working_directory' => base_path(),
+        'timeout' => 300,
+        'commands' => [
+            'Pint' => [PHP_BINARY, 'vendor/bin/pint', '--test'],
+            'PHPStan' => [PHP_BINARY, 'vendor/bin/phpstan', 'analyse'],
+            'Tests' => [PHP_BINARY, 'vendor/bin/pest'],
+            'CI' => [
+                'command' => ['composer', 'test'],
+                'include_in_all' => false,
+            ],
         ],
     ],
 

@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\Factory;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 use LaravelTui\LaravelTui\Art\ArtRepository;
+use LaravelTui\LaravelTui\Checks\CheckRunner;
 use LaravelTui\LaravelTui\Console\ArtisanRunner;
 use LaravelTui\LaravelTui\Console\Commands\DatabaseDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\LaravelTuiCommand;
@@ -36,6 +37,7 @@ class LaravelTuiServiceProvider extends ServiceProvider
             $app->make(Filesystem::class),
         ));
         $this->app->singleton(Miku::class);
+        $this->app->singleton(CheckRunner::class);
         $this->app->bind(QueueRepository::class, fn (Application $app): QueueRepository => new QueueRepository(
             $app->make(Factory::class),
             $app->make('queue.failer'),
