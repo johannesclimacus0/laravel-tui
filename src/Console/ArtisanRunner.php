@@ -16,20 +16,21 @@ class ArtisanRunner
         private string $workingDirectory,
     ) {}
 
-    public function start(string $name, string $arguments = ''): Process
+    /** @param string|list<string> $arguments */
+    public function start(string $name, string|array $arguments = ''): Process
     {
         if ($this->command === [] || $name === '' || $name === 'ui') {
             throw new InvalidArgumentException('Invalid Artisan command.');
         }
 
-        $input = new StringInput($arguments);
+        $tokens = is_array($arguments) ? $arguments : (new StringInput($arguments))->getRawTokens();
         $process = new Process(
             [
                 ...$this->command,
                 '--no-interaction',
                 '--no-ansi',
                 $name,
-                ...$input->getRawTokens(),
+                ...$tokens,
             ],
             cwd: $this->workingDirectory,
         );
