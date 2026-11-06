@@ -6,6 +6,7 @@ namespace LaravelTui\LaravelTui\Console\Commands;
 
 use Illuminate\Console\Command;
 use LaravelTui\LaravelTui\Contracts\Module;
+use LaravelTui\LaravelTui\Processes\ProcessManager;
 use LaravelTui\LaravelTui\UI\Dashboard;
 use LaravelTui\LaravelTui\UI\Miku;
 
@@ -37,17 +38,23 @@ class LaravelTuiCommand extends Command
             $modules[] = $module;
         }
 
-        $dashboard->run(
-            $modules,
-            config('laravel-tui.keybindings', []),
-            config('laravel-tui.key_aliases', []),
-            (string) config('app.name', 'Laravel'),
-            config('laravel-tui.icons', []),
-            config('laravel-tui.captions', []),
-            $pictures,
-            config('laravel-tui.art.modules', []),
-            (string) config('laravel-tui.art.default', 'mliku'),
-        );
+        try {
+            $dashboard->run(
+                $modules,
+                config('laravel-tui.keybindings', []),
+                config('laravel-tui.key_aliases', []),
+                (string) config('app.name', 'Laravel'),
+                config('laravel-tui.icons', []),
+                config('laravel-tui.captions', []),
+                $pictures,
+                config('laravel-tui.art.modules', []),
+                (string) config('laravel-tui.art.default', 'mliku'),
+            );
+        } finally {
+            if ($this->laravel->resolved(ProcessManager::class)) {
+                $this->laravel->make(ProcessManager::class)->stopAll();
+            }
+        }
 
         return self::SUCCESS;
     }
