@@ -8,6 +8,7 @@ use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\MigrationsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
 use LaravelTui\LaravelTui\Modules\QueueModule;
+use LaravelTui\LaravelTui\Modules\RoutesModule;
 use LaravelTui\LaravelTui\Modules\SchedulerModule;
 
 return [
@@ -19,6 +20,7 @@ return [
         QueueModule::class,
         MigrationsModule::class,
         DatabaseModule::class,
+        RoutesModule::class,
     ],
 
     'mouse' => [
@@ -61,6 +63,7 @@ return [
         'overview_refresh' => ['r'],
         'scheduler_refresh' => ['r'],
         'migrations_refresh' => ['r'],
+        'routes_refresh' => ['r'],
         'database_refresh' => ['r'],
         'database_next' => ['n'],
         'database_previous' => ['p'],
@@ -121,6 +124,7 @@ return [
             'queue' => 'mikumiku',
             'migrations' => 'leek-spin',
             'database' => 'mikudayo',
+            'routes' => 'miku.exe',
         ],
     ],
 
@@ -141,6 +145,7 @@ return [
             'queue' => "\u{f0ae}",
             'migrations' => "\u{f021}",
             'database' => "\u{f1c0}",
+            'routes' => "\u{f126}",
         ],
     ],
 
@@ -173,6 +178,14 @@ return [
         'database' => [
             'maybe later',
         ],
+        'routes' => [
+            'maybe later',
+        ],
+    ],
+
+    'routes' => [
+        'exclude' => [],
+        'timeout' => 8,
     ],
 
     'database' => [
@@ -183,7 +196,7 @@ return [
 
     'migrations' => [
         'allow_actions' => true,
-        'confirm_actions' => true,
+        'confirm_actions' => false,
         'timeout' => 8,
     ],
 
