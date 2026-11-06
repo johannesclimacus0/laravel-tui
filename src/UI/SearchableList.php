@@ -29,11 +29,13 @@ class SearchableList extends ContainerWidget
 
     /**
      * @param  list<array{value: string, label: string, search?: string}>  $items
+     * @param  list<string>  $literalSearchCharacters
      */
     public function __construct(
         private array $items,
         private ?string $footerPrompt = null,
         private string $emptyMessage = 'No items available',
+        private array $literalSearchCharacters = [],
     ) {
         $this->filteredCount = count($items);
         $this->input = new InputWidget;
@@ -253,6 +255,10 @@ class SearchableList extends ContainerWidget
     {
         $keys = $this->list->getKeybindings();
         $printable = $keys->getParser()->decodePrintable($data) ?? $data;
+
+        if ($this->searching && in_array($printable, $this->literalSearchCharacters, true)) {
+            return false;
+        }
         $key = strtr($printable, config('laravel-tui.key_aliases', []));
 
         return $keys->matches($key, 'toggle_search');

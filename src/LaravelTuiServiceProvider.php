@@ -17,6 +17,7 @@ use LaravelTui\LaravelTui\Console\Commands\LaravelTuiCommand;
 use LaravelTui\LaravelTui\Console\Commands\MigrationDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\QueueDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\RetryQueueJobCommand;
+use LaravelTui\LaravelTui\Console\Commands\RouteDataCommand;
 use LaravelTui\LaravelTui\Queue\QueueRepository;
 use LaravelTui\LaravelTui\UI\Miku;
 
@@ -72,6 +73,7 @@ class LaravelTuiServiceProvider extends ServiceProvider
             LaravelTuiCommand::class,
             DatabaseDataCommand::class,
             MigrationDataCommand::class,
+            RouteDataCommand::class,
             QueueDataCommand::class,
             RetryQueueJobCommand::class,
         ]);
