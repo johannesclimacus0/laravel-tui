@@ -49,6 +49,7 @@ return [
         'logs_follow' => ['ctrl+down'],
         'logs_level' => ['f'],
         'logs_pause' => ['p'],
+        'overview_refresh' => ['r'],
         'scheduler_refresh' => ['r'],
         'queue_refresh' => ['r'],
         'queue_retry' => ['t'],
