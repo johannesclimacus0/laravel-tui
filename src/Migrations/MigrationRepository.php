@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelTui\LaravelTui\Migrations;
 
+use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Foundation\Application;
 use RuntimeException;
@@ -14,7 +15,9 @@ class MigrationRepository
 
     public function snapshot(): MigrationSnapshot
     {
-        return $this->migrator->usingConnection(null, function (): MigrationSnapshot {
+        $connection = $this->app->make(ConnectionResolverInterface::class)->getDefaultConnection();
+
+        return $this->migrator->usingConnection($connection, function (): MigrationSnapshot {
             $files = $this->migrator->getMigrationFiles([
                 ...$this->migrator->paths(),
                 $this->app->databasePath('migrations'),
