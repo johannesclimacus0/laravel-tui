@@ -5,6 +5,7 @@ declare(strict_types=1);
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\ChecksModule;
 use LaravelTui\LaravelTui\Modules\DatabaseModule;
+use LaravelTui\LaravelTui\Modules\GitModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\MigrationsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
@@ -25,6 +26,7 @@ return [
         RoutesModule::class,
         ChecksModule::class,
         ProcessesModule::class,
+        GitModule::class,
     ],
 
     'mouse' => [
@@ -71,6 +73,7 @@ return [
         'checks_run' => ['r'],
         'processes_restart' => ['r'],
         'processes_stop' => ['s'],
+        'git_refresh' => ['r'],
         'database_refresh' => ['r'],
         'database_next' => ['n'],
         'database_previous' => ['p'],
@@ -137,6 +140,7 @@ return [
             'routes' => 'miku.exe',
             'checks' => '1',
             'processes' => '2',
+            'git' => '3',
         ],
     ],
 
@@ -160,6 +164,7 @@ return [
             'routes' => "\u{f126}",
             'checks' => "\u{f046}",
             'processes' => "\u{eaf8}",
+            'git' => "\u{f1d3}",
         ],
     ],
 
@@ -201,6 +206,15 @@ return [
         'processes' => [
             'maybe later',
         ],
+        'git' => [
+            'maybe later',
+        ],
+    ],
+
+    'git' => [
+        'path' => base_path(),
+        'timeout' => 8,
+        'history_limit' => 30,
     ],
 
     'processes' => [
