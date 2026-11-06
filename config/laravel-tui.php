@@ -17,6 +17,11 @@ return [
         QueueModule::class,
     ],
 
+    'mouse' => [
+        'enabled' => true,
+        'wheel_lines' => 3,
+    ],
+
     'theme' => [
         'text' => 'default',
         'muted' => '#65727A',
