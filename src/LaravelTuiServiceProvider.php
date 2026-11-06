@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use LaravelTui\LaravelTui\Art\ArtRepository;
 use LaravelTui\LaravelTui\Console\ArtisanRunner;
 use LaravelTui\LaravelTui\Console\Commands\LaravelTuiCommand;
+use LaravelTui\LaravelTui\Console\Commands\MigrationDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\QueueDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\RetryQueueJobCommand;
 use LaravelTui\LaravelTui\Queue\QueueRepository;
@@ -68,6 +69,7 @@ class LaravelTuiServiceProvider extends ServiceProvider
 
         $this->commands([
             LaravelTuiCommand::class,
+            MigrationDataCommand::class,
             QueueDataCommand::class,
             RetryQueueJobCommand::class,
         ]);
