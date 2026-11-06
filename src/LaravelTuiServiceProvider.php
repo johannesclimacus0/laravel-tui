@@ -19,6 +19,7 @@ use LaravelTui\LaravelTui\Console\Commands\MigrationDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\QueueDataCommand;
 use LaravelTui\LaravelTui\Console\Commands\RetryQueueJobCommand;
 use LaravelTui\LaravelTui\Console\Commands\RouteDataCommand;
+use LaravelTui\LaravelTui\Processes\ProcessManager;
 use LaravelTui\LaravelTui\Queue\QueueRepository;
 use LaravelTui\LaravelTui\UI\Miku;
 
@@ -38,6 +39,12 @@ class LaravelTuiServiceProvider extends ServiceProvider
         ));
         $this->app->singleton(Miku::class);
         $this->app->singleton(CheckRunner::class);
+        $this->app->singleton(ProcessManager::class);
+        $this->app->terminating(function (): void {
+            if ($this->app->resolved(ProcessManager::class)) {
+                $this->app->make(ProcessManager::class)->stopAll();
+            }
+        });
         $this->app->bind(QueueRepository::class, fn (Application $app): QueueRepository => new QueueRepository(
             $app->make(Factory::class),
             $app->make('queue.failer'),

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace LaravelTui\LaravelTui\UI;
 
+use Illuminate\Contracts\Foundation\Application;
 use InvalidArgumentException;
 use LaravelTui\LaravelTui\Contracts\Module;
+use LaravelTui\LaravelTui\Processes\ProcessManager;
 use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Input\Keybindings;
@@ -22,6 +24,8 @@ use Symfony\Component\Tui\Widget\TextWidget;
 
 class Dashboard
 {
+    public function __construct(private Application $app) {}
+
     /**
      * @param  list<Module>  $modules
      * @param  array<string, list<string>>  $keybindings
@@ -237,10 +241,17 @@ class Dashboard
             $tui->addListener($mouse->handle(...), -10);
         }
 
+        $processTick = $tui->scheduleInterval(function (): void {
+            if ($this->app->resolved(ProcessManager::class)) {
+                $this->app->make(ProcessManager::class)->tick();
+            }
+        }, 0.1);
+
         try {
             $mouse?->enable();
             $tui->run();
         } finally {
+            $tui->cancelInterval($processTick);
             $mouse?->disable();
             $content->clear();
         }

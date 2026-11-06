@@ -8,6 +8,7 @@ use LaravelTui\LaravelTui\Modules\DatabaseModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\MigrationsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
+use LaravelTui\LaravelTui\Modules\ProcessesModule;
 use LaravelTui\LaravelTui\Modules\QueueModule;
 use LaravelTui\LaravelTui\Modules\RoutesModule;
 use LaravelTui\LaravelTui\Modules\SchedulerModule;
@@ -23,6 +24,7 @@ return [
         DatabaseModule::class,
         RoutesModule::class,
         ChecksModule::class,
+        ProcessesModule::class,
     ],
 
     'mouse' => [
@@ -67,6 +69,8 @@ return [
         'migrations_refresh' => ['r'],
         'routes_refresh' => ['r'],
         'checks_run' => ['r'],
+        'processes_restart' => ['r'],
+        'processes_stop' => ['s'],
         'database_refresh' => ['r'],
         'database_next' => ['n'],
         'database_previous' => ['p'],
@@ -80,6 +84,9 @@ return [
     ],
 
     'key_aliases' => [
+        'S' => 's',
+        'ы' => 's',
+        'Ы' => 's',
         'R' => 'r',
         'к' => 'r',
         'К' => 'r',
@@ -129,6 +136,7 @@ return [
             'database' => 'mikudayo',
             'routes' => 'miku.exe',
             'checks' => '1',
+            'processes' => '2',
         ],
     ],
 
@@ -151,6 +159,7 @@ return [
             'database' => "\u{f1c0}",
             'routes' => "\u{f126}",
             'checks' => "\u{f046}",
+            'processes' => "\u{eaf8}",
         ],
     ],
 
@@ -188,6 +197,19 @@ return [
         ],
         'checks' => [
             'maybe later',
+        ],
+        'processes' => [
+            'maybe later',
+        ],
+    ],
+
+    'processes' => [
+        'working_directory' => base_path(),
+        'timeout' => null,
+        'commands' => [
+            'Queue worker' => [PHP_BINARY, base_path('artisan'), 'queue:work', '--sleep=1', '--tries=1'],
+            'Scheduler' => [PHP_BINARY, base_path('artisan'), 'schedule:work'],
+            'Vite' => ['npm', 'run', 'dev'],
         ],
     ],
 
