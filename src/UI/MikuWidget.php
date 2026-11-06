@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace LaravelTui\LaravelTui\UI;
 
 use Symfony\Component\Tui\Render\RenderContext;
+use Symfony\Component\Tui\Style\Style;
+use Symfony\Component\Tui\Style\TextAlign;
 use Symfony\Component\Tui\Widget\AbstractWidget;
 use Symfony\Component\Tui\Widget\VerticallyExpandableInterface;
 
@@ -34,7 +36,9 @@ class MikuWidget extends AbstractWidget implements VerticallyExpandableInterface
     public function __construct(
         private Miku $art,
         private string $name,
-    ) {}
+    ) {
+        $this->setStyle(new Style(textAlign: TextAlign::Center));
+    }
 
     public function render(RenderContext $context): array
     {

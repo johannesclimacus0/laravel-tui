@@ -106,8 +106,8 @@ return [
         'modules' => [
             'overview' => 'mliku',
             'artisan' => 'miku.exe',
-            'logs' => 'mikudayo',
-            'scheduler' => 'mikumiku',
+            'logs' => 'popipoipo',
+            'scheduler' => 'sekai-de',
             'queue' => 'mikumiku',
         ],
     ],
@@ -142,16 +142,16 @@ return [
             'oo ee oo~',
         ],
         'artisan' => [
-            'maybe later',
+            'php artisan popipopi:popipo',
         ],
         'logs' => [
-            'maybe later',
+            'miku reads your logs',
         ],
         'scheduler' => [
-            'maybe later',
+            'gonna oversleep this job',
         ],
         'queue' => [
-            'maybe later',
+            'queued for a leek',
         ],
     ],
 
