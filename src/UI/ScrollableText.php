@@ -31,6 +31,11 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
 
     private int $maxOffset = 0;
 
+    public function __construct(string $text = '', bool $truncate = false, private bool $highlightCurrentLine = true)
+    {
+        parent::__construct($text, $truncate);
+    }
+
     public function expandVertically(bool $expand): static
     {
         $this->expanded = $expand;
@@ -112,7 +117,7 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
         $window = array_slice($lines, $this->offset, $this->rows);
         $index = $this->selected - $this->offset;
 
-        if ($this->isFocused() && isset($window[$index])) {
+        if ($this->highlightCurrentLine && $this->isFocused() && isset($window[$index])) {
             $window[$index] = $this->applyElement('selected', AnsiUtils::stripAnsiCodes($window[$index]));
         }
 
