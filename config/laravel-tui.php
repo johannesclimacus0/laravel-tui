@@ -5,12 +5,14 @@ declare(strict_types=1);
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
+use LaravelTui\LaravelTui\Modules\SchedulerModule;
 
 return [
     'modules' => [
         OverviewModule::class,
         ArtisanModule::class,
         LogsModule::class,
+        SchedulerModule::class,
     ],
 
     'theme' => [
@@ -45,9 +47,13 @@ return [
         'logs_follow' => ['ctrl+down'],
         'logs_level' => ['f'],
         'logs_pause' => ['p'],
+        'scheduler_refresh' => ['r'],
     ],
 
     'key_aliases' => [
+        'R' => 'r',
+        'к' => 'r',
+        'К' => 'r',
         'Q' => 'q',
         'й' => 'q',
         'Й' => 'q',
@@ -76,6 +82,7 @@ return [
             'overview' => 'mliku',
             'artisan' => 'miku.exe',
             'logs' => 'mikudayo',
+            'scheduler' => 'mikumiku',
         ],
     ],
 
@@ -92,6 +99,7 @@ return [
             'example' => "\u{f121}",
             'artisan' => "\u{f011b}",
             'logs' => "\u{f0219}",
+            'scheduler' => "\u{f0954}",
         ],
     ],
 
@@ -110,6 +118,9 @@ return [
             'maybe later',
         ],
         'logs' => [
+            'maybe later',
+        ],
+        'scheduler' => [
             'maybe later',
         ],
     ],
