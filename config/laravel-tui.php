@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
+use LaravelTui\LaravelTui\Modules\MigrationsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
 use LaravelTui\LaravelTui\Modules\QueueModule;
 use LaravelTui\LaravelTui\Modules\SchedulerModule;
@@ -15,6 +16,7 @@ return [
         LogsModule::class,
         SchedulerModule::class,
         QueueModule::class,
+        MigrationsModule::class,
     ],
 
     'mouse' => [
@@ -56,6 +58,7 @@ return [
         'logs_pause' => ['p'],
         'overview_refresh' => ['r'],
         'scheduler_refresh' => ['r'],
+        'migrations_refresh' => ['r'],
         'queue_refresh' => ['r'],
         'queue_retry' => ['t'],
         'queue_forget' => ['d'],
@@ -109,6 +112,7 @@ return [
             'logs' => 'popipoipo',
             'scheduler' => 'sekai-de',
             'queue' => 'mikumiku',
+            'migrations' => 'leek-spin',
         ],
     ],
 
@@ -127,6 +131,7 @@ return [
             'logs' => "\u{f0219}",
             'scheduler' => "\u{f0954}",
             'queue' => "\u{f0ae}",
+            'migrations' => "\u{f1c0}",
         ],
     ],
 
@@ -153,6 +158,15 @@ return [
         'queue' => [
             'queued for a leek',
         ],
+        'migrations' => [
+            'maybe later',
+        ],
+    ],
+
+    'migrations' => [
+        'allow_actions' => true,
+        'confirm_actions' => true,
+        'timeout' => 8,
     ],
 
     'logs' => [
