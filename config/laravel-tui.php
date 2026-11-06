@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use LaravelTui\LaravelTui\Modules\ArtisanModule;
+use LaravelTui\LaravelTui\Modules\DatabaseModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\MigrationsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
@@ -17,6 +18,7 @@ return [
         SchedulerModule::class,
         QueueModule::class,
         MigrationsModule::class,
+        DatabaseModule::class,
     ],
 
     'mouse' => [
@@ -59,6 +61,11 @@ return [
         'overview_refresh' => ['r'],
         'scheduler_refresh' => ['r'],
         'migrations_refresh' => ['r'],
+        'database_refresh' => ['r'],
+        'database_next' => ['n'],
+        'database_previous' => ['p'],
+        'database_column_next' => ['right'],
+        'database_column_previous' => ['left'],
         'queue_refresh' => ['r'],
         'queue_retry' => ['t'],
         'queue_forget' => ['d'],
@@ -113,6 +120,7 @@ return [
             'scheduler' => 'sekai-de',
             'queue' => 'mikumiku',
             'migrations' => 'leek-spin',
+            'database' => 'mikudayo',
         ],
     ],
 
@@ -132,6 +140,7 @@ return [
             'scheduler' => "\u{f0954}",
             'queue' => "\u{f0ae}",
             'migrations' => "\u{f1c0}",
+            'database' => "\u{f1c0}",
         ],
     ],
 
@@ -161,6 +170,15 @@ return [
         'migrations' => [
             'maybe later',
         ],
+        'database' => [
+            'maybe later',
+        ],
+    ],
+
+    'database' => [
+        'connections' => [],
+        'page_size' => 25,
+        'timeout' => 8,
     ],
 
     'migrations' => [
