@@ -15,6 +15,7 @@ class WorkbenchServiceProvider extends ServiceProvider
     {
         $this->app['config']->set('laravel-tui.art.path', dirname(__DIR__, 2).'/resources/laravel-tui');
         $root = dirname(__DIR__, 3);
+        $this->app['config']->set('laravel-tui.git.path', $root);
         $this->app['config']->set('laravel-tui.checks.working_directory', $root);
         $this->app['config']->set('laravel-tui.processes.working_directory', $root);
         $this->app['config']->set('laravel-tui.processes.commands.Queue worker', [PHP_BINARY, $root.'/vendor/bin/testbench', 'queue:work', '--sleep=1', '--tries=1']);
