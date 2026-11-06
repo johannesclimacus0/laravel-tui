@@ -12,6 +12,7 @@ use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Tui\Ansi\AnsiUtils;
 use Symfony\Component\Tui\Event\SelectEvent;
+use Symfony\Component\Tui\Style\Color;
 use Symfony\Component\Tui\Style\Style;
 use Symfony\Component\Tui\Widget\ContainerWidget;
 use Symfony\Component\Tui\Widget\TextWidget;
@@ -95,7 +96,7 @@ class DatabasePanel extends ContainerWidget
         $this->clear();
         $this->list = null;
         $this->grid = null;
-        $this->summary->setText($this->plain($this->connection ?? 'Connections').($this->table === '' ? '' : ' / '.$this->plain($this->table)));
+        $this->summary->setText($this->heading());
         $this->add($this->summary);
         $this->add($this->status);
     }
@@ -138,7 +139,7 @@ class DatabasePanel extends ContainerWidget
         $this->screen = 'tables';
         $this->table = '';
         $this->frame();
-        $items = array_map(fn (array $row): array => ['value' => $row[0], 'label' => $this->plain($row[0])], $this->tables->rows ?? []);
+        $items = array_map(fn (array $row): array => ['value' => $row[0], 'label' => $this->paint("\u{f0ce} ", 'muted').$this->plain($row[0])], $this->tables->rows ?? []);
         $this->list = new SearchableList($items, emptyMessage: $this->tables === null ? '' : 'No tables found');
         $this->list->setQuery($this->query, $this->selection);
         $this->list->onSelect(function (SelectEvent $event): void {
@@ -171,6 +172,8 @@ class DatabasePanel extends ContainerWidget
             ['value' => 'rows', 'label' => 'Browse records'],
             ['value' => 'structure', 'label' => 'Structure and indexes'],
         ], maxVisible: 2);
+        $menu->setStyle(new Style(color: config('laravel-tui.theme.muted', '#65727A')));
+        $menu->addStyleClass('module-menu');
         $menu->onSelect(function (SelectEvent $event): void {
             $this->selectedRow = 0;
             $this->columnOffset = 0;
@@ -189,8 +192,10 @@ class DatabasePanel extends ContainerWidget
         }
         $this->screen = $this->result->kind;
         $this->frame();
-        $this->summary->setText($this->plain($this->connection ?? '').' / '.$this->plain($this->table)
-            .($this->screen === 'rows' ? ' | Page '.($this->result->page + 1).' | '.count($this->result->rows).' rows' : ' | Structure'));
+        $meta = $this->screen === 'rows'
+            ? 'Page '.($this->result->page + 1).'  /  '.count($this->result->rows).' rows  /  '.count($this->result->columns).' columns'
+            : count($this->result->rows).' columns  /  '.count($this->result->indexes).' indexes';
+        $this->summary->setText($this->heading()."\n".$this->paint($meta, 'muted'));
         $this->grid = new DatabaseGrid($this->result->columns, $this->result->rows);
         $this->grid->setColumnOffset($this->columnOffset);
         $this->grid->onInput(fn (string $data): bool => $this->input($data));
@@ -264,7 +269,7 @@ class DatabasePanel extends ContainerWidget
         $this->frame();
         $lines = [];
         foreach ($this->result->columns as $index => $name) {
-            $lines[] = $this->plain($name).":\n".$this->plain($record[$index] ?? '')."\n";
+            $lines[] = $this->paint($name, 'workspace_border')."\n".$this->plain($record[$index] ?? '')."\n";
         }
         $detail = new ScrollableText(implode("\n", $lines));
         $detail->onInput(function (string $data): bool {
@@ -383,7 +388,7 @@ class DatabasePanel extends ContainerWidget
                 $this->tables = $result;
 
                 if ($this->screen === 'tables' && $this->list?->isSearching()) {
-                    $this->list->setItems(array_map(fn (array $row): array => ['value' => $row[0], 'label' => $this->plain($row[0])], $result->rows));
+                    $this->list->setItems(array_map(fn (array $row): array => ['value' => $row[0], 'label' => $this->paint("\u{f0ce} ", 'muted').$this->plain($row[0])], $result->rows));
                 } else {
                     $this->showTables();
                 }
@@ -425,6 +430,27 @@ class DatabasePanel extends ContainerWidget
         $this->process = null;
         $this->stdout = '';
         $this->stderr = '';
+    }
+
+    private function heading(): string
+    {
+        if ($this->connection === null) {
+            return $this->paint('Connections', 'workspace_border');
+        }
+
+        return $this->paint($this->connection, 'border')
+            .($this->table === '' ? '' : $this->paint(' / ', 'muted').$this->paint($this->table, 'workspace_border'));
+    }
+
+    private function paint(string $text, string $tone): string
+    {
+        $fallback = match ($tone) {
+            'muted' => '#65727A',
+            'workspace_border' => '#E879A9',
+            default => '#39C5BB',
+        };
+
+        return Color::from(config('laravel-tui.theme.'.$tone, $fallback))->toForegroundCode().$this->plain($text)."\x1b[0m";
     }
 
     private function plain(string $text): string

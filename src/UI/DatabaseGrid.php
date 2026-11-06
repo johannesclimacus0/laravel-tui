@@ -16,6 +16,8 @@ class DatabaseGrid extends AdaptiveList
 
     private string $header = '';
 
+    private string $divider = '';
+
     /**
      * @param  list<string>  $columns
      * @param  list<list<string>>  $records
@@ -69,6 +71,8 @@ class DatabaseGrid extends AdaptiveList
 
         if ($this->layoutKey !== $key) {
             $selected = $this->getSelectedItem()['value'] ?? '0';
+            $gutter = $width >= 16 ? strlen((string) max(1, count($this->records))) + 2 : 0;
+            $available = max(1, $width - $gutter);
             $widths = [];
             $used = 0;
             for ($index = $this->columnOffset; $index < count($this->columns); $index++) {
@@ -77,18 +81,19 @@ class DatabaseGrid extends AdaptiveList
                     $size = max($size, AnsiUtils::visibleWidth($record[$index] ?? ''));
                 }
                 $size = min(24, max(6, $size));
-                $gap = $widths === [] ? 0 : 2;
+                $gap = $widths === [] ? 0 : 3;
 
-                if ($used + $gap + $size > $width && $widths !== []) {
+                if ($used + $gap + $size > $available && $widths !== []) {
                     break;
                 }
-                $widths[$index] = min($size, max(1, $width - $used - $gap));
+                $widths[$index] = min($size, max(1, $available - $used - $gap));
                 $used += $gap + $widths[$index];
             }
-            $this->header = $this->line($this->columns, $widths);
+            $this->header = ($gutter === 0 ? '' : str_pad('#', $gutter)).$this->line($this->columns, $widths, true);
+            $this->divider = str_repeat('─', $gutter).implode('─┼─', array_map(static fn (int $size): string => str_repeat('─', $size), $widths));
             $items = [];
             foreach ($this->records as $index => $record) {
-                $items[] = ['value' => (string) $index, 'label' => $this->line($record, $widths)];
+                $items[] = ['value' => (string) $index, 'label' => ($gutter === 0 ? '' : $this->tone(str_pad((string) ($index + 1), $gutter - 1, ' ', STR_PAD_LEFT).' ', 'muted')).$this->line($record, $widths)];
             }
             $this->setItems($items);
             $this->setSelectedIndex((int) $selected);
@@ -102,21 +107,44 @@ class DatabaseGrid extends AdaptiveList
             return $context->getRows() < 1 ? [] : [$heading];
         }
 
-        return [$heading, str_repeat('─', $width), ...parent::render($context->withRows($context->getRows() - 2))];
+        return [$heading, $this->tone($this->divider, 'muted'), ...parent::render($context->withRows($context->getRows() - 2))];
     }
 
     /**
      * @param  list<string>  $values
      * @param  array<int, int>  $widths
      */
-    private function line(array $values, array $widths): string
+    private function line(array $values, array $widths, bool $header = false): string
     {
         $cells = [];
         foreach ($widths as $index => $width) {
             $cell = AnsiUtils::truncateToWidth($values[$index] ?? '', $width);
-            $cells[] = $cell.str_repeat(' ', max(0, $width - AnsiUtils::visibleWidth($cell)));
+            $padding = str_repeat(' ', max(0, $width - AnsiUtils::visibleWidth($cell)));
+
+            if (! $header) {
+                $value = $values[$index] ?? '';
+                $cell = match (true) {
+                    $value === 'NULL', str_starts_with($value, '0x') => $this->tone($cell, 'muted'),
+                    $value === 'true', $value === 'false' => $this->tone($cell, 'workspace_border'),
+                    is_numeric($value) => $this->tone($cell, 'border'),
+                    default => $this->tone($cell, 'text'),
+                };
+            }
+            $cells[] = $cell.$padding;
         }
 
-        return implode('  ', $cells);
+        return implode($header ? ' │ ' : $this->tone(' │ ', 'muted'), $cells);
+    }
+
+    private function tone(string $text, string $tone): string
+    {
+        $fallback = match ($tone) {
+            'muted' => '#65727A',
+            'border' => '#39C5BB',
+            'workspace_border' => '#E879A9',
+            default => 'default',
+        };
+
+        return Color::from(config('laravel-tui.theme.'.$tone, $fallback))->toForegroundCode().$text."\x1b[0m";
     }
 }

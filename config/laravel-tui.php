@@ -139,7 +139,7 @@ return [
             'logs' => "\u{f0219}",
             'scheduler' => "\u{f0954}",
             'queue' => "\u{f0ae}",
-            'migrations' => "\u{f1c0}",
+            'migrations' => "\u{f021}",
             'database' => "\u{f1c0}",
         ],
     ],
