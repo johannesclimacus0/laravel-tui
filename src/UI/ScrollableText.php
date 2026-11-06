@@ -31,6 +31,9 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
 
     private int $maxOffset = 0;
 
+    /** @var list<string> */
+    private array $mouseTextRows = [];
+
     public function __construct(string $text = '', bool $truncate = false, private bool $highlightCurrentLine = true)
     {
         parent::__construct($text, $truncate);
@@ -80,6 +83,33 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
         $this->invalidate();
     }
 
+    public function mouseClick(int $row): void
+    {
+        if ($row >= 0 && $row < $this->rows && $this->offset + $row <= $this->lastLine) {
+            $this->selected = $this->offset + $row;
+            $this->following = false;
+            $this->invalidate();
+        }
+    }
+
+    public function hasTextAt(int $row, int $col): bool
+    {
+        $line = AnsiUtils::stripAnsiCodes($this->mouseTextRows[$row] ?? '');
+        $end = AnsiUtils::visibleWidth(rtrim($line));
+        $start = AnsiUtils::visibleWidth($line) - AnsiUtils::visibleWidth(ltrim($line));
+
+        return $col >= $start && $col < $end;
+    }
+
+    public function mouseScroll(int $lines): void
+    {
+        $offset = max(0, min($this->maxOffset, $this->offset + $lines));
+        $this->selected = max(0, min($this->lastLine, $this->selected + $offset - $this->offset));
+        $this->offset = $offset;
+        $this->following = false;
+        $this->invalidate();
+    }
+
     public function handleInput(string $data): void
     {
         if ($this->onInput !== null && ($this->onInput)($data)) {
@@ -101,7 +131,7 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
 
     public function render(RenderContext $context): array
     {
-        $lines = parent::render($context);
+        $lines = array_values(parent::render($context));
         $this->rows = max(1, $context->getRows());
         $this->lastLine = max(0, count($lines) - 1);
         $this->maxOffset = max(0, count($lines) - $this->rows);
@@ -115,6 +145,7 @@ class ScrollableText extends TextWidget implements FocusableInterface, Verticall
         }
 
         $window = array_slice($lines, $this->offset, $this->rows);
+        $this->mouseTextRows = $window;
         $index = $this->selected - $this->offset;
 
         if ($this->highlightCurrentLine && $this->isFocused() && isset($window[$index])) {

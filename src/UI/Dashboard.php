@@ -9,6 +9,7 @@ use LaravelTui\LaravelTui\Contracts\Module;
 use Symfony\Component\Tui\Event\InputEvent;
 use Symfony\Component\Tui\Event\SelectEvent;
 use Symfony\Component\Tui\Input\Keybindings;
+use Symfony\Component\Tui\Render\Renderer;
 use Symfony\Component\Tui\Style\Align;
 use Symfony\Component\Tui\Style\Direction;
 use Symfony\Component\Tui\Style\Style;
@@ -63,7 +64,8 @@ class Dashboard
 
         // TUI init
         $keys = new Keybindings($keybindings);
-        $tui = new Tui(keybindings: $keys);
+        $renderer = new Renderer;
+        $tui = new Tui(keybindings: $keys, renderer: $renderer);
 
         $accent = config('laravel-tui.theme.focus', '#6DE2D5');
         $muted = config('laravel-tui.theme.muted', '#65727A');
@@ -92,7 +94,8 @@ class Dashboard
 
         // Art loading
         $artNames = $pictures->names();
-        $activeArt = $moduleArt[$modules[0]->id()] ?? $defaultArt;
+        $activeModule = $modules[0]->id();
+        $activeArt = $moduleArt[$activeModule] ?? $defaultArt;
         foreach ([$defaultArt, ...array_values($moduleArt)] as $name) {
             if (! in_array($name, $artNames, true)) {
                 throw new InvalidArgumentException('Unknown configured art: '.$name);
@@ -168,8 +171,9 @@ class Dashboard
         $tui->onTick($resize);
 
         // Open selected module
-        $menu->onSelect(function (SelectEvent $event) use ($tui, $menu, $indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt): void {
+        $menu->onSelect(function (SelectEvent $event) use ($tui, $menu, $indexed, $labels, $content, $workspace, $caption, $captions, $art, $moduleArt, $defaultArt, &$activeArt, &$activeModule): void {
             $module = $indexed[$event->getValue()];
+            $activeModule = $module->id();
             $widget = $module->widget();
 
             $content->clear();
@@ -184,8 +188,15 @@ class Dashboard
             }
         });
 
+        $cycleArt = function () use ($art, $artNames, $tui, &$activeArt): void {
+            $index = array_search($activeArt, $artNames, true);
+            $activeArt = $artNames[((int) $index + 1) % count($artNames)];
+            $art->setName($activeArt);
+            $tui->requestRender();
+        };
+
         // Keybindings
-        $tui->addListener(function (InputEvent $event) use ($keys, $tui, $keyAliases, $art, $artNames, &$activeArt): void {
+        $tui->addListener(function (InputEvent $event) use ($keys, $tui, $keyAliases, $cycleArt): void {
             if (
                 $tui->getFocus() instanceof InputWidget
                 && ! $keys->getParser()->matches($event->getData(), 'ctrl+c')
@@ -205,18 +216,32 @@ class Dashboard
 
             if ($keys->matches($key, 'cycle_art')) {
                 $event->stopPropagation();
-                $index = array_search($activeArt, $artNames, true);
-                $activeArt = $artNames[((int) $index + 1) % count($artNames)];
-                $art->setName($activeArt);
-                $tui->requestRender();
+                $cycleArt();
             }
         });
 
         $tui->setFocus($menu);
+        $mouse = config('laravel-tui.mouse.enabled', true) ? new MouseNavigation($tui, $renderer, $panels) : null;
+
+        if ($mouse !== null) {
+            $mouse->onClick($artArea, $cycleArt);
+            $mouse->onClick($caption, function () use ($caption, $captions, &$activeModule): void {
+                $quotes = $captions[$activeModule] ?? $captions['default'] ?? [];
+
+                if ($quotes === []) {
+                    return;
+                }
+                $index = array_search($caption->getText(), $quotes, true);
+                $caption->setText($quotes[($index === false ? 0 : $index + 1) % count($quotes)]);
+            });
+            $tui->addListener($mouse->handle(...), -10);
+        }
 
         try {
+            $mouse?->enable();
             $tui->run();
         } finally {
+            $mouse?->disable();
             $content->clear();
         }
     }

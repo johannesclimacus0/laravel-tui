@@ -29,6 +29,8 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
     public function render(RenderContext $context): array
     {
         if ($this->items === []) {
+            $this->setMouseRows([]);
+
             return $this->emptyMessage === '' ? [] : [$this->applyElement('no-match', AnsiUtils::truncateToWidth(
                 $this->emptyMessage,
                 $context->getColumns(),
@@ -44,6 +46,7 @@ class AdaptiveList extends MenuList implements VerticallyExpandableInterface
         $selected = array_search($this->getSelectedItem()['value'] ?? '', array_column($this->items, 'value'), true);
         $index = $selected === false ? 0 : $selected;
         $start = max(0, min($index - intdiv($visible, 2), $count - $visible));
+        $this->setMouseRows(array_keys(array_slice($this->items, $start, $visible, true)));
         $window = [];
 
         foreach (array_slice($this->items, $start, $visible) as $offset => $item) {
