@@ -67,7 +67,7 @@ class ChecksPanel extends ContainerWidget
         }, $this->runner->definitions());
     }
 
-    private function actions(): MenuList
+    private function actions(): Panel
     {
         $actions = new MenuList([
             ['value' => 'all', 'label' => 'Run all'],
@@ -84,7 +84,10 @@ class ChecksPanel extends ContainerWidget
             $this->update();
         });
 
-        return $actions;
+        $panel = new Panel('Actions', config('laravel-tui.theme.focus', '#6DE2D5'), inactiveColor: config('laravel-tui.theme.muted', '#65727A'));
+        $panel->content()->add($actions);
+
+        return $panel;
     }
 
     private function showList(): void
