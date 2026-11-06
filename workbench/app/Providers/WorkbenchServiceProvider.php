@@ -15,6 +15,7 @@ class WorkbenchServiceProvider extends ServiceProvider
     {
         $this->app['config']->set('laravel-tui.art.path', dirname(__DIR__, 2).'/resources/laravel-tui');
         $root = dirname(__DIR__, 3);
+        $this->app['config']->set('laravel-tui.checks.working_directory', $root);
         $connection = $this->app['config']->get('database.default');
         $key = 'database.connections.'.$connection;
 
