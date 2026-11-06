@@ -82,7 +82,9 @@ class GitPanel extends ContainerWidget
         $this->add($this->metadata);
         $this->add($this->status);
         $this->add($this->content);
-        $this->add($this->navigation);
+        $actions = new Panel('Actions', config('laravel-tui.theme.focus', '#6DE2D5'), inactiveColor: config('laravel-tui.theme.muted', '#65727A'));
+        $actions->content()->add($this->navigation);
+        $this->add($actions);
         $this->showList('files', false);
     }
 
