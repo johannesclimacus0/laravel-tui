@@ -31,7 +31,7 @@ class ScheduleRepository
                 ? $event->getSummaryForDisplay()
                 : $event->normalizeCommand($event->command ?? '');
             $label = $event->description ?: $command;
-            $timezone = $event->timezone ?? config('app.timezone', 'UTC');
+            $timezone = $event->timezone ?: config('app.timezone', 'UTC');
             $timezone = $timezone instanceof DateTimeZone ? $timezone->getName() : $timezone;
             $frequency = $this->frequency($event);
             $environment = app()->environment();
