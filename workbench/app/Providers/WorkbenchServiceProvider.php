@@ -18,12 +18,4 @@ class WorkbenchServiceProvider extends ServiceProvider
         $this->app['config']->set('laravel-tui.artisan.command', [PHP_BINARY, $root.'/vendor/bin/testbench']);
         $this->app['config']->set('laravel-tui.artisan.working_directory', $root);
     }
-
-    /**
-     * Bootstrap services.
-     */
-    public function boot(): void
-    {
-        //
-    }
 }

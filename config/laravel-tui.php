@@ -6,12 +6,14 @@ use LaravelTui\LaravelTui\Modules\ArtisanModule;
 use LaravelTui\LaravelTui\Modules\LogsModule;
 use LaravelTui\LaravelTui\Modules\OverviewModule;
 use LaravelTui\LaravelTui\Modules\QueueModule;
+use LaravelTui\LaravelTui\Modules\SchedulerModule;
 
 return [
     'modules' => [
         OverviewModule::class,
         ArtisanModule::class,
         LogsModule::class,
+        SchedulerModule::class,
         QueueModule::class,
     ],
 
@@ -47,6 +49,7 @@ return [
         'logs_follow' => ['ctrl+down'],
         'logs_level' => ['f'],
         'logs_pause' => ['p'],
+        'scheduler_refresh' => ['r'],
         'queue_refresh' => ['r'],
         'queue_retry' => ['t'],
         'queue_forget' => ['d'],
@@ -55,6 +58,9 @@ return [
     ],
 
     'key_aliases' => [
+        'R' => 'r',
+        'к' => 'r',
+        'К' => 'r',
         'Q' => 'q',
         'й' => 'q',
         'Й' => 'q',
@@ -68,9 +74,6 @@ return [
         'з' => 'p',
         'З' => 'p',
         '.' => '/',
-        'R' => 'r',
-        'к' => 'r',
-        'К' => 'r',
         'T' => 't',
         'е' => 't',
         'Е' => 't',
@@ -98,6 +101,7 @@ return [
             'overview' => 'mliku',
             'artisan' => 'miku.exe',
             'logs' => 'mikudayo',
+            'scheduler' => 'mikumiku',
             'queue' => 'mikumiku',
         ],
     ],
@@ -115,6 +119,7 @@ return [
             'example' => "\u{f121}",
             'artisan' => "\u{f011b}",
             'logs' => "\u{f0219}",
+            'scheduler' => "\u{f0954}",
             'queue' => "\u{f0ae}",
         ],
     ],
@@ -134,6 +139,9 @@ return [
             'maybe later',
         ],
         'logs' => [
+            'maybe later',
+        ],
+        'scheduler' => [
             'maybe later',
         ],
         'queue' => [
