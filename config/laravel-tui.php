@@ -138,7 +138,7 @@ return [
             'migrations' => 'leek-spin',
             'database' => 'mikudayo',
             'routes' => 'miku.exe',
-            'checks' => '1',
+            'checks' => '5',
             'processes' => '2',
             'git' => '3',
         ],
