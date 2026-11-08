@@ -2,6 +2,8 @@
 
 TUI for Laravel. 
 
+Artwork shamelessly stolen from [mikusays](https://github.com/xxanqw/mikusays).
+
 ## Requirements
 
 - PHP `^8.4.1`
