@@ -242,6 +242,9 @@ return [
             'CI' => [
                 'command' => ['composer', 'test'],
                 'include_in_all' => false,
+                'env' => [
+                    'APP_ENV' => 'testing',
+                ],
             ],
         ],
     ],
