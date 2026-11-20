@@ -6,7 +6,10 @@ namespace LaravelTui\LaravelTui\Checks;
 
 final readonly class CheckDefinition
 {
-    /** @param list<string> $command */
+    /**
+     * @param  list<string>  $command
+     * @param  array<string, string>  $env
+     */
     public function __construct(
         public string $id,
         public string $label,
@@ -14,5 +17,6 @@ final readonly class CheckDefinition
         public string $workingDirectory,
         public ?float $timeout,
         public bool $includeInAll,
+        public array $env = [],
     ) {}
 }

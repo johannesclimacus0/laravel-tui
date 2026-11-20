@@ -233,7 +233,12 @@ return [
         'commands' => [
             'Pint' => [PHP_BINARY, 'vendor/bin/pint', '--test'],
             'PHPStan' => [PHP_BINARY, 'vendor/bin/phpstan', 'analyse'],
-            'Tests' => [PHP_BINARY, 'vendor/bin/pest'],
+            'Tests' => [
+                'command' => [PHP_BINARY, 'vendor/bin/pest'],
+                'env' => [
+                    'APP_ENV' => 'testing',
+                ],
+            ],
             'CI' => [
                 'command' => ['composer', 'test'],
                 'include_in_all' => false,

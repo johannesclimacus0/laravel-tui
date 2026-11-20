@@ -75,6 +75,25 @@ final class CheckRunner
                 throw new InvalidArgumentException("Check [{$label}] include_in_all must be a boolean.");
             }
 
+            $env = $options['env'] ?? [];
+
+            if (! is_array($env)) {
+                throw new InvalidArgumentException("Check [{$label}] env must be an array.");
+            }
+
+            foreach ($env as $name => $value) {
+                if (
+                    ! is_string($name)
+                    || $name === ''
+                    || str_contains($name, '=')
+                    || str_contains($name, "\0")
+                    || ! is_string($value)
+                    || str_contains($value, "\0")
+                ) {
+                    throw new InvalidArgumentException("Check [{$label}] env must contain valid string names and values.");
+                }
+            }
+
             $this->definitions[$label] = new CheckDefinition(
                 $label,
                 $label,
@@ -82,6 +101,7 @@ final class CheckRunner
                 $this->directory(array_key_exists('working_directory', $options) ? $options['working_directory'] : $root, $root),
                 array_key_exists('timeout', $options) ? $this->timeout($options['timeout']) : $timeout,
                 $includeInAll,
+                $env,
             );
             $this->results[$label] = new CheckResult;
         }
@@ -189,7 +209,7 @@ final class CheckRunner
 
             try {
                 $command = $this->setsid === null ? $definition->command : [$this->setsid, '--', ...$definition->command];
-                $this->process = new Process($command, $definition->workingDirectory, timeout: null);
+                $this->process = new Process($command, $definition->workingDirectory, $definition->env, timeout: null);
                 $this->process->disableOutput();
                 $this->process->start(function (string $type, string $output) use ($id): void {
                     $this->append($id, $output);
